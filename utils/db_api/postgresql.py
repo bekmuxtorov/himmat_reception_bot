@@ -6,6 +6,7 @@ from asyncpg.pool import Pool
 
 from data import config
 
+
 class Database:
 
     def __init__(self):
@@ -49,6 +50,18 @@ class Database:
         """
         await self.execute(sql, execute=True)
 
+    async def create_table_groups(self):
+        sql = """
+        CREATE TABLE IF NOT EXISTS groups(
+            id SERIAL PRIMARY KEY,
+            by_user_id BIGINT NOT NULL,
+            by_user_name VARCHAR(255) NOT NULL,
+            group_id BIGINT NOT NULL,
+            group_name VARCHAR(255) NULL,
+            created_at DATETIME NOT NULL DEFAULT NOW(), 
+           )
+        """
+
     @staticmethod
     def format_args(sql, parameters: dict):
         sql += " AND ".join([
@@ -56,6 +69,40 @@ class Database:
                                                           start=1)
         ])
         return sql, tuple(parameters.values())
+
+    async def add_group(self, by_user_id, by_user_name, group_id, created_at):
+        sql = """
+            INSERT INTO groups (by_user_id, by_user_name, group_id, created_at) 
+            VALUES ($1, $2, $3, $4) returning *;
+        """
+        return await self.execute(self, by_user_id, by_user_name, group_id, created_at, fetchrow=True)
+
+    async def select_all_groups(self):
+        sql = "SELECT * FROM groups"
+        data = await self.execute(sql, fetch=True)
+        return [
+            {
+                "by_user_name": item[2],
+                "group_id": item[3],
+                "group_name": item[4],
+                "created_at": item[5]
+            } for item in data
+        ] if data else None
+
+    async def select_group(self, **kwargs):
+        sql = """
+            SELECT * FROM groups WHERE 
+        """
+        sql, parameters = self.format_args(sql, parameters=kwargs)
+        data = await self.execute(sql, *parameters, fetchrow=True)
+        return {
+            "id": data[0],
+            "by_user_id": data[1],
+            "by_user_name": data[2],
+            "group_id": data[3],
+            "group_name": data[4],
+            "created_at": data[5],
+        } if data else None
 
     async def add_user(self, full_name, username, telegram_id):
         sql = "INSERT INTO users (full_name, username, telegram_id) VALUES($1, $2, $3) returning *"
