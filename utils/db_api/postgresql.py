@@ -53,14 +53,15 @@ class Database:
     async def create_table_groups(self):
         sql = """
         CREATE TABLE IF NOT EXISTS groups(
-            id SERIAL PRIMARY KEY,
-            by_user_id BIGINT NOT NULL,
-            by_user_name VARCHAR(255) NOT NULL,
-            group_id BIGINT NOT NULL,
-            group_name VARCHAR(255) NULL,
-            created_at DATETIME NOT NULL DEFAULT NOW(), 
-           )
+        id SERIAL PRIMARY KEY,
+        by_user_id BIGINT NOT NULL,
+        by_user_name VARCHAR(255) NOT NULL,
+        group_id BIGINT NOT NULL,
+        group_name VARCHAR(255) NULL,
+        created_at timestamp with time zone NOT NULL DEFAULT NOW()
+        );
         """
+        await self.execute(sql, execute=True)
 
     @staticmethod
     def format_args(sql, parameters: dict):
