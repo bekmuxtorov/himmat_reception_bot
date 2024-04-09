@@ -58,7 +58,8 @@ class Database:
         by_user_name VARCHAR(255) NOT NULL,
         group_id BIGINT NOT NULL,
         group_name VARCHAR(255) NULL,
-        created_at timestamp with time zone NOT NULL DEFAULT NOW()
+        created_at timestamp with time zone NOT NULL DEFAULT NOW(),
+        for_whom VARCHAR(255) NULL
         );
         """
         await self.execute(sql, execute=True)
@@ -71,12 +72,12 @@ class Database:
         ])
         return sql, tuple(parameters.values())
 
-    async def add_group(self, by_user_id, by_user_name, group_id, created_at):
+    async def add_group(self, by_user_id, by_user_name, group_id, group_name, created_at, for_whom):
         sql = """
-            INSERT INTO groups (by_user_id, by_user_name, group_id, created_at) 
-            VALUES ($1, $2, $3, $4) returning *;
+            INSERT INTO groups (by_user_id, by_user_name, group_id, group_name, created_at, for_whom) 
+            VALUES ($1, $2, $3, $4, $5, $6) returning *;
         """
-        return await self.execute(self, by_user_id, by_user_name, group_id, created_at, fetchrow=True)
+        return await self.execute(sql, by_user_id, by_user_name, group_id, group_name, created_at, for_whom, fetchrow=True)
 
     async def select_all_groups(self):
         sql = "SELECT * FROM groups"
@@ -86,7 +87,7 @@ class Database:
                 "by_user_name": item[2],
                 "group_id": item[3],
                 "group_name": item[4],
-                "created_at": item[5]
+                "created_at": item[5],
             } for item in data
         ] if data else None
 
@@ -103,7 +104,13 @@ class Database:
             "group_id": data[3],
             "group_name": data[4],
             "created_at": data[5],
+            "for_whom": data[6]
         } if data else None
+
+    async def delete_group(self, **kwargs):
+        sql = "DELETE FROM groups WHERE "
+        sql, parameters = self.format_args(sql, parameters=kwargs)
+        await self.execute(sql, *parameters, execute=True)
 
     async def add_user(self, full_name, username, telegram_id):
         sql = "INSERT INTO users (full_name, username, telegram_id) VALUES($1, $2, $3) returning *"
