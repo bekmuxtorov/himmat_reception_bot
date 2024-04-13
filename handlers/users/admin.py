@@ -7,6 +7,7 @@ from datetime import datetime
 from data.config import ADMINS
 from filters.is_group import IsGroup, IsGroupAdmin
 from loader import dp, db, bot
+from utils import get_now
 
 
 @dp.message_handler(IsGroupAdmin(), IsGroup(), commands="group_for_users")
@@ -21,13 +22,12 @@ async def add_group(message: types.Message):
         await service_message.delete()
         return
 
-    now_date = pytz.timezone("Asia/Tashkent").localize(datetime.now())
     await db.add_group(
         by_user_id=user_data.id,
         by_user_name=user_data.full_name,
         group_id=group_data.id,
         group_name=group_data.full_name,
-        created_at=now_date,
+        created_at=await get_now(),
         for_whom="for_users"
     )
     service_message = await message.answer(
@@ -64,13 +64,12 @@ async def send_ad_to_all(message: types.Message):
 
     await db.delete_group(for_whom=for_whom)
 
-    now_date = pytz.timezone("Asia/Tashkent").localize(datetime.now())
     await db.add_group(
         by_user_id=user_data.id,
         by_user_name=user_data.full_name,
         group_id=group_data.id,
         group_name=group_data.full_name,
-        created_at=now_date,
+        created_at=await get_now(),
         for_whom=for_whom
     )
     service_message = await message.answer(
