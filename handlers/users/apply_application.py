@@ -2,13 +2,13 @@ from aiogram import types
 from aiogram.types import ReplyKeyboardRemove
 from aiogram.dispatcher import FSMContext
 
-from loader import dp
+from loader import dp, bot, db
 from filters import IsPrivate
-from utils.const_texts import submit_application, terms, send_message_to_admin
+from utils.const_texts import submit_application, terms, send_message_to_admin_text
 from utils.set_message import set_message
 from keyboards.inline.inline_buttons import agree_buttons
 from keyboards.default.default_buttons import make_buttons
-from states.submit_application import SubmitApplication
+from states.submit_application import SubmitApplication, SendMessageToAdmin
 
 
 @dp.message_handler(IsPrivate(), text=submit_application)
@@ -19,12 +19,13 @@ async def bot_echo(message: types.Message):
 
 
 @dp.callback_query_handler(text="agree_no", state=SubmitApplication.be_agree)
-async def bot_echo(call: types.CallbackQuery):
+async def bot_echo(call: types.CallbackQuery, state: FSMContext):
     await call.message.delete()
     await call.message.answer(
         text="Shartlarga rozi bo'lmasangiz loyihada qatnashish uchun so'rov jo'nata olmaysiz.",
-        reply_markup=make_buttons([send_message_to_admin])
+        reply_markup=make_buttons([send_message_to_admin_text])
     )
+    await state.finish()
 
 
 @dp.callback_query_handler(text="agree_yes", state=SubmitApplication.be_agree)
@@ -38,6 +39,7 @@ async def bot_echo(call: types.CallbackQuery):
 async def submit_app(message: types.Message, state: FSMContext):
     gender = message.text
     await state.update_data(gender=gender)
+    await db.update_user_gender(telegram_id=message.from_user.id, gender=gender)
     await message.answer(text="👤 Ism va familiyani kiriting:", reply_markup=ReplyKeyboardRemove())
     await SubmitApplication.full_name.set()
 
@@ -66,15 +68,41 @@ async def submit_app(message: types.Message, state: FSMContext):
 @dp.callback_query_handler(text="agree_no", state=SubmitApplication.be_send)
 async def submit_app(call: types.CallbackQuery, state: FSMContext):
     await call.message.delete()
-    await call.message.answer(
-        text="ℹ️ Ariza bekor qilindi!\n\nQayta urinib ko'rishingiz mumkin.",
-        reply_markup=make_buttons(
-            [send_message_to_admin, submit_application], row_width=2)
-    )
+    await call.message.answer(text="ℹ️ Ariza bekor qilindi!\n\nQayta urinib ko'rishingiz mumkin.", reply_markup=make_buttons(words=[f'{send_message_to_admin_text}', f"{submit_application}"], row_width=2))
     await state.finish()
 
 
 @dp.callback_query_handler(text="agree_yes", state=SubmitApplication.be_send)
-async def submit_app(call: types.Message, state: FSMContext):
+async def submit_app(call: types.CallbackQuery, state: FSMContext):
+    await call.message.delete()
     user_data = await state.get_data()
     new_application = await set_message(user_data=user_data, to_admin=True)
+    message_status = await send_message_to_admin(gender=user_data.get("gender"), text=new_application)
+    if message_status:
+        await call.message.answer("✅ Arizangiz qabul qilidi!\n\nTez orada qayta aloqaga chiqiladi.")
+        return
+    await bot.send_message(chat_id=1018544836, text="⚡ Iltimos admin uchun guruhlarni biriktiring.")
+    await call.message.answer("ℹ️ Ariza jo'natishda muammo paydo bo'ldi, iltimos birozdan keyin qayta urinib ko'ring.", reply_markup=make_buttons(words=[f'{send_message_to_admin_text}', f"{submit_application}"], row_width=2))
+
+
+async def get_group_id():
+    data_man = await db.select_group(for_whom="man_admin")
+    data_woman = await db.select_group(for_whom="woman_admin")
+    return {
+        "for_man": data_man.get("group_id") if data_man else None,
+        "for_woman": data_woman.get("group_id") if data_woman else None
+    }
+
+
+async def send_message_to_admin(gender: str, text: str):
+    groups = await get_group_id()
+    if None in groups.values():
+        return False
+
+    if gender == "Erkak":
+        group_id = groups.get("for_man")
+        await bot.send_message(chat_id=group_id, text=text, disable_web_page_preview=True)
+    else:
+        group_id = groups.get("for_woman")
+        await bot.send_message(chat_id=group_id, text=text)
+    return True
