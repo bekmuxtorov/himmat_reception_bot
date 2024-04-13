@@ -13,7 +13,6 @@ from loader import dp, db, bot
 async def add_group(message: types.Message):
     group_data = message.chat
     user_data = message.from_user
-    now_date = pytz.timezone("Asia/Tashkent").localize(datetime.now())
     data = await db.select_group(group_id=group_data.id)
     if data:
         service_message = await message.answer(f"ℹ️ {data.get('group_name')} guruhi bazaga qo'shilgan.")
@@ -42,7 +41,11 @@ async def add_group(message: types.Message):
 @dp.message_handler(IsGroupAdmin(), IsGroup(), commands=['group_for_man_admin', 'group_for_woman_admin'])
 async def send_ad_to_all(message: types.Message):
     command = message.get_command()
-    command_items = command.split('_')
+    if '@' in command:
+        needly_message = command.split("@")[0]
+        command_items = needly_message.split('_')
+    else:
+        command_items = command.split('_')
     for_whom = command_items[2] + "_" + command_items[3]
     gender = "Erkak" if command_items[2] == "man" else "Ayol"
     group_data = message.chat
