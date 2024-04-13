@@ -41,11 +41,13 @@ class Database:
 
     async def create_table_users(self):
         sql = """
-        CREATE TABLE IF NOT EXISTS Users (
+        CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         full_name VARCHAR(255) NOT NULL,
         username varchar(255) NULL,
-        telegram_id BIGINT NOT NULL UNIQUE 
+        telegram_id BIGINT NOT NULL UNIQUE,
+        gender VARCHAR(128) NULL,
+        created_at timestamp with time zone NOT NULL DEFAULT NOW()
         );
         """
         await self.execute(sql, execute=True)
@@ -74,9 +76,10 @@ class Database:
                 answer VARCHAR(255) NULL,
                 respondent_id BIGINT NULL,
                 respondent_full_name VARCHAR(255) NULL,
-                created_at timestamp with time zone NOT NULL DEFAULT NOW(),
-            )
+                created_at timestamp with time zone NOT NULL DEFAULT NOW()
+            );
         """
+        await self.execute(sql, execute=True)
 
     @staticmethod
     def format_args(sql, parameters: dict):
@@ -154,26 +157,34 @@ class Database:
             "created_at": data[7]
         } if data else None
 
-    async def add_user(self, full_name, username, telegram_id):
-        sql = "INSERT INTO users (full_name, username, telegram_id) VALUES($1, $2, $3) returning *"
-        return await self.execute(sql, full_name, username, telegram_id, fetchrow=True)
+    async def add_user(self, full_name, username, telegram_id, created_at):
+        sql = "INSERT INTO users (full_name, username, telegram_id, created_at) VALUES($1, $2, $3, $4) returning *"
+        return await self.execute(sql, full_name, username, telegram_id, created_at, fetchrow=True)
 
     async def select_all_users(self):
-        sql = "SELECT * FROM Users"
+        sql = "SELECT * FROM users"
         return await self.execute(sql, fetch=True)
 
     async def select_user(self, **kwargs):
-        sql = "SELECT * FROM Users WHERE "
+        sql = "SELECT * FROM users WHERE "
         sql, parameters = self.format_args(sql, parameters=kwargs)
-        return await self.execute(sql, *parameters, fetchrow=True)
+        data = await self.execute(sql, *parameters, fetchrow=True)
+        return {
+            "id": data[0],
+            "full_name": data[1],
+            "username": data[2],
+            "telegram_id": data[3],
+            "gender": data[4],
+            "created_at": data[5]
+        } if data else None
 
     async def count_users(self):
-        sql = "SELECT COUNT(*) FROM Users"
+        sql = "SELECT COUNT(*) FROM users"
         return await self.execute(sql, fetchval=True)
 
-    async def update_user_username(self, username, telegram_id):
-        sql = "UPDATE Users SET username=$1 WHERE telegram_id=$2"
-        return await self.execute(sql, username, telegram_id, execute=True)
+    async def update_user_gender(self, gender, telegram_id):
+        sql = "UPDATE users SET gender=$1 WHERE telegram_id=$2"
+        return await self.execute(sql, gender, telegram_id, execute=True)
 
     async def delete_users(self):
         await self.execute("DELETE FROM Users WHERE TRUE", execute=True)
