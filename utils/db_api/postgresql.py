@@ -64,6 +64,20 @@ class Database:
         """
         await self.execute(sql, execute=True)
 
+    async def create_table_questions(self):
+        sql = """
+            CREATE TABLE IF NOT EXISTS questions (
+                id SERIAL PRIMARY KEY,
+                sender_id BIGINT NOT NULL,
+                sender_full_name VARCHAR(255) NOT NULL,
+                question VARCHAR(255) NOT NULL,
+                answer VARCHAR(255) NULL,
+                respondent_id BIGINT NULL,
+                respondent_full_name VARCHAR(255) NULL,
+                created_at timestamp with time zone NOT NULL DEFAULT NOW(),
+            )
+        """
+
     @staticmethod
     def format_args(sql, parameters: dict):
         sql += " AND ".join([
@@ -111,6 +125,34 @@ class Database:
         sql = "DELETE FROM groups WHERE "
         sql, parameters = self.format_args(sql, parameters=kwargs)
         await self.execute(sql, *parameters, execute=True)
+
+    async def add_question(self, sender_id, sender_full_name, question, created_at):
+        sql = """
+            INSERT INTO questions (sender_id, sender_full_name, question, created_at)
+            VALUES ($1, $2, $3, $4) returning *;
+        """
+        return await self.execute(sql, sender_id, sender_full_name, question, created_at, fetchrow=True)
+
+    async def update_question(self, id, answer, respondent_id, respondent_full_name):
+        sql = "UPDATE question SET answer=$2, respondent_id=$3, respondent_full_name=$4, WHERE telegram_id=$1"
+        return await self.execute(sql, id, answer, respondent_id, respondent_full_name, execute=True)
+
+    async def select_question(self, **kwargs):
+        sql = """
+            SELECT * FROM questions WHERE 
+        """
+        sql, parameters = self.format_args(sql, parameters=kwargs)
+        data = await self.execute(sql, *parameters, fetchrow=True)
+        return {
+            "id": data[0],
+            "sender_id": data[1],
+            "sender_full_name": data[2],
+            "question": data[3],
+            "answer": data[4],
+            "respondent_id": data[5],
+            "respondent_full_name": data[6],
+            "created_at": data[7]
+        } if data else None
 
     async def add_user(self, full_name, username, telegram_id):
         sql = "INSERT INTO users (full_name, username, telegram_id) VALUES($1, $2, $3) returning *"
