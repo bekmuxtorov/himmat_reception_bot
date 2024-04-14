@@ -97,7 +97,7 @@ class Database:
         return await self.execute(sql, by_user_id, by_user_name, group_id, group_name, created_at, for_whom, fetchrow=True)
 
     async def select_all_groups(self):
-        sql = "SELECT * FROM groups"
+        sql = "SELECT * FROM groups WHERE for_whom in ('man_users', 'woman_users');"
         data = await self.execute(sql, fetch=True)
         return [
             {
@@ -110,10 +110,25 @@ class Database:
 
     async def select_group(self, **kwargs):
         sql = """
-            SELECT * FROM groups WHERE 
+            SELECT * FROM groups  WHERE 
         """
         sql, parameters = self.format_args(sql, parameters=kwargs)
         data = await self.execute(sql, *parameters, fetchrow=True)
+        return {
+            "id": data[0],
+            "by_user_id": data[1],
+            "by_user_name": data[2],
+            "group_id": data[3],
+            "group_name": data[4],
+            "created_at": data[5],
+            "for_whom": data[6]
+        } if data else None
+
+    async def select_group_by_for_whom(self, for_whom):
+        sql = """
+            select * from groups where for_whom=$1 order by created_at desc limit 1 
+        """
+        data = await self.execute(sql, for_whom, fetchrow=True)
         return {
             "id": data[0],
             "by_user_id": data[1],

@@ -1,6 +1,7 @@
 import asyncpg
 from aiogram import types
 from aiogram.dispatcher.filters.builtin import CommandStart
+from aiogram.utils.deep_linking import decode_payload
 
 from loader import dp, db, bot
 from utils.define_is_member import is_member
@@ -9,10 +10,22 @@ from utils.const_texts import submit_application
 from filters.is_private import IsPrivate
 from keyboards.default.default_buttons import make_buttons
 from utils import get_now
+from .admin import accept_app, cancel_app, message_to_user, answer_to_question
 
 
 @dp.message_handler(IsPrivate(), CommandStart())
 async def bot_start(message: types.Message):
+    if message.get_args():
+        payload = decode_payload(message.get_args())
+        if 'accept' in payload:
+            await accept_app(message=message, payload=payload)
+        elif "cancel" in payload:
+            await cancel_app(message=message, payload=payload)
+        elif "message_to_user" in payload:
+            await message_to_user(message=message, payload=payload)
+        elif "question" in payload:
+            await answer_to_question(message=message, payload=payload)
+        return
     user_id = message.from_user.id
     groups = await db.select_all_groups()
     if groups:
