@@ -11,6 +11,7 @@ from filters.is_private import IsPrivate
 from keyboards.default.default_buttons import make_buttons
 from utils import get_now
 from .admin import accept_app, cancel_app, message_to_user, answer_to_question
+from states.for_admin import CancelApp
 
 
 @dp.message_handler(IsPrivate(), CommandStart())

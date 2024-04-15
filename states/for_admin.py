@@ -7,6 +7,8 @@ class AcceptApp(StatesGroup):
 
 
 class CancelApp(StatesGroup):
+    first_data = State()
+    cause_text = State()
     confirm = State()
 
 

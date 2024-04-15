@@ -17,7 +17,7 @@ async def button_for_admins_application(user_id, message_id=None, chat_id=None):
         url=for_accept_link)
     )
 
-    for_cancel_link = await get_start_link(f"cancel:{user_id}", encode=True)
+    for_cancel_link = await get_start_link(f"cancel:{user_id}:{chat_id}:{message_id}", encode=True)
     button_for_admins.insert(InlineKeyboardButton(
         text="❌ Bekor qilish",
         url=for_cancel_link)
