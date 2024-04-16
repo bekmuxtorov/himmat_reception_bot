@@ -13,4 +13,8 @@ class CancelApp(StatesGroup):
 
 
 class MessageToUser(StatesGroup):
-    confirm = State()
+    qestion = State()
+
+
+class AnswerToUser(StatesGroup):
+    answer = State()
