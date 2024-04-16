@@ -11,6 +11,12 @@ from keyboards.default.default_buttons import make_buttons
 from states.submit_application import SubmitApplication
 
 
+@dp.message_handler(IsPrivate(), text="❌ Bekor qilish", state="*")
+async def bot_start(message: types.Message, state: FSMContext):
+    await message.answer("💡 Jarayon bekor qilindi!", reply_markup=make_buttons(words=[f'{send_message_to_admin_text}', f"{submit_application}"], row_width=2))
+    await state.finish()
+
+
 @dp.message_handler(IsPrivate(), text=submit_application)
 async def bot_echo(message: types.Message):
     await message.answer(terms, reply_markup=ReplyKeyboardRemove())
@@ -23,7 +29,8 @@ async def bot_echo(call: types.CallbackQuery, state: FSMContext):
     await call.message.delete()
     await call.message.answer(
         text="Shartlarga rozi bo'lmasangiz loyihada qatnashish uchun so'rov jo'nata olmaysiz.",
-        reply_markup=make_buttons([send_message_to_admin_text])
+        reply_markup=make_buttons(
+            words=[f'{send_message_to_admin_text}', f"{submit_application}"], row_width=2)
     )
     await state.finish()
 

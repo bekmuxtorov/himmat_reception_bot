@@ -14,7 +14,7 @@ from .admin import accept_app, cancel_app, message_to_user, answer_to_question
 from states.for_admin import CancelApp
 
 
-@dp.message_handler(IsPrivate(), CommandStart())
+@dp.message_handler(IsPrivate(), CommandStart(), state="*")
 async def bot_start(message: types.Message):
     if message.get_args():
         payload = decode_payload(message.get_args())
