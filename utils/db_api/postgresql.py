@@ -149,7 +149,8 @@ class Database:
             INSERT INTO questions (sender_id, sender_full_name, question, created_at)
             VALUES ($1, $2, $3, $4) returning *;
         """
-        return await self.execute(sql, sender_id, sender_full_name, question, created_at, fetchrow=True)
+        data = await self.execute(sql, sender_id, sender_full_name, question, created_at, fetchrow=True)
+        return data[0]
 
     async def update_question(self, id, answer, respondent_id, respondent_full_name):
         sql = "UPDATE question SET answer=$2, respondent_id=$3, respondent_full_name=$4, WHERE telegram_id=$1"
