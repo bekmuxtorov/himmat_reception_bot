@@ -12,6 +12,7 @@ from utils import get_now, create_referral_link, const_texts
 from keyboards.default.default_buttons import make_buttons
 from states.for_admin import AcceptApp, CancelApp, MessageToUser, AnswerToUser
 from data.config import DAYS, MEMBER_LIMIT
+from utils.const_texts import send_message_to_admin_text, submit_application
 
 
 @dp.message_handler(IsGroupAdmin(), IsGroup(), commands=["group_for_man_users", "group_for_woman_users"])
@@ -124,7 +125,10 @@ async def accept_app(message: types.Message, payload: str, state: FSMContext = A
     if gender == "Erkak":
         await bot.send_message(
             chat_id=user_id,
-            text=f"Xurmatli <b>{user_full_name}</b>\nSiz guruhga qabul qilindingiz!\n\nSizning taklif havolangiz: {referral_link_man}\n\nMuhim: Havolaning yaroqlilik muddati {DAYS} kun bo'lib, faqat {MEMBER_LIMIT} marotaba ishlatishingiz mumkin.")
+            text=f"Xurmatli <b>{user_full_name}</b>\nSiz guruhga qabul qilindingiz!\n\nSizning taklif havolangiz: {referral_link_man}\n\nMuhim: Havolaning yaroqlilik muddati {DAYS} kun bo'lib, faqat {MEMBER_LIMIT} marotaba ishlatishingiz mumkin.",
+            reply_markup=make_buttons(
+                words=[f'{send_message_to_admin_text}', f"{submit_application}"], row_width=2)
+        )
     elif gender == "Ayol":
         await bot.send_message(
             chat_id=user_id,

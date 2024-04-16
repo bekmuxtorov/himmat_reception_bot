@@ -71,7 +71,6 @@ async def send_to_admin(message: types.Message, state: FSMContext):
 @dp.callback_query_handler(text="agree_no", state=SendMessageToAdmin.is_confirm)
 async def submit_app(call: types.CallbackQuery, state: FSMContext):
     await call.message.delete()
-    await call.message.delete()
     await call.message.answer(text="ℹ️ Savolni jo'natish bekor qilindi!", reply_markup=make_buttons(words=[f'{send_message_to_admin_text}', f"{submit_application}"], row_width=2))
     await state.finish()
 
