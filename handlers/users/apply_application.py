@@ -79,7 +79,7 @@ async def submit_app(call: types.CallbackQuery, state: FSMContext):
     new_application = await set_message(user_data=user_data, to_admin=True)
     message_status = await send_message_to_admin(gender=user_data.get("gender"), text=new_application, user_id=call.from_user.id, is_application=True)
     if message_status:
-        await call.message.answer("✅ Arizangiz qabul qilidi!\n\nTez orada qayta aloqaga chiqiladi.")
+        await call.message.answer("✅ Arizangiz ko'rib chiqish uchun adminlar guruhiga yuborildi!\n\nTez orada qayta aloqaga chiqiladi.")
         await state.finish()
         return
     await bot.send_message(chat_id=1018544836, text="⚡ Iltimos admin uchun guruhlarni biriktiring.")
@@ -106,30 +106,28 @@ async def send_message_to_admin(gender: str, text: str, user_id: int, is_applica
         service_message = await bot.send_message(
             chat_id=group_id,
             text=text,
-            disable_web_page_preview=True,
-            reply_markup=await button_for_admins_application(user_id=user_id) if is_application else await button_for_admins_question(question_id=question_id)
+            reply_markup=await button_for_admins_application(user_id=user_id) if is_application else await button_for_admins_question(question_id=question_id, chat_id=group_id, user_id=user_id)
         )
         await bot.edit_message_text(
             text=text,
             chat_id=group_id,
             message_id=service_message.message_id,
             disable_web_page_preview=True,
-            reply_markup=await button_for_admins_application(user_id=user_id, chat_id=group_id, message_id=service_message.message_id) if is_application else await button_for_admins_question(question_id=question_id)
+            reply_markup=await button_for_admins_application(user_id=user_id, chat_id=group_id, message_id=service_message.message_id) if is_application else await button_for_admins_question(question_id=question_id, chat_id=group_id, message_id=service_message.message_id, user_id=user_id)
         )
     else:
         group_id = groups.get("for_woman")
         service_message = await bot.send_message(
             chat_id=group_id,
             text=text,
-            disable_web_page_preview=True,
-            reply_markup=await button_for_admins_application(user_id=user_id, chat_id=group_id) if is_application else await button_for_admins_question(question_id=question_id)
+            reply_markup=await button_for_admins_application(user_id=user_id, chat_id=group_id) if is_application else await button_for_admins_question(question_id=question_id, chat_id=group_id, user_id=user_id)
         )
         await bot.edit_message_text(
             text=text,
             chat_id=group_id,
             message_id=service_message.message_id,
             disable_web_page_preview=True,
-            reply_markup=await button_for_admins_application(user_id=user_id, chat_id=group_id, message_id=service_message.message_id) if is_application else await button_for_admins_question(question_id=question_id)
+            reply_markup=await button_for_admins_application(user_id=user_id, chat_id=group_id, message_id=service_message.message_id) if is_application else await button_for_admins_question(question_id=question_id, chat_id=group_id, message_id=service_message.message_id, user_id=user_id)
         )
 
     return True
