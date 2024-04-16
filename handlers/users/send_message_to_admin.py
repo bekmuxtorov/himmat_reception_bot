@@ -102,7 +102,7 @@ async def submit_app(call: types.CallbackQuery, state: FSMContext):
 
     send_status = await send_message_to_admin(gender=gender, text=text, user_id=user_id, question_id=question_id)
     if not send_status:
-        await bot.send_message(chat_id=1018544836, text="⚡ Iltimos admin uchun guruhlarni biriktiring.")
+        await bot.send_message(chat_id=1603330179, text="⚡ Iltimos admin uchun guruhlarni biriktiring.")
         return
 
     await call.message.answer("✅ Xabaringiz muaffaqiyatli yuborildi, tez orada javob qaytariladi.")

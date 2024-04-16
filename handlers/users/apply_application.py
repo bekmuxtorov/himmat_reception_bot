@@ -82,7 +82,7 @@ async def submit_app(call: types.CallbackQuery, state: FSMContext):
         await call.message.answer("✅ Arizangiz ko'rib chiqish uchun adminlar guruhiga yuborildi!\n\nTez orada qayta aloqaga chiqiladi.")
         await state.finish()
         return
-    await bot.send_message(chat_id=1018544836, text="⚡ Iltimos admin uchun guruhlarni biriktiring.")
+    await bot.send_message(chat_id=1603330179, text="⚡ Iltimos admin uchun guruhlarni biriktiring.")
     await call.message.answer("ℹ️ Ariza jo'natishda muammo paydo bo'ldi, iltimos birozdan keyin qayta urinib ko'ring.", reply_markup=make_buttons(words=[f'{send_message_to_admin_text}', f"{submit_application}"], row_width=2))
     await state.finish()
 
