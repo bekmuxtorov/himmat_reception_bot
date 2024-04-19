@@ -210,6 +210,45 @@ class Database:
             "created_at": data[6]
         } if data else None
 
+    # For courses
+    async def add_course(self, name, description, for_man_group_id, for_woman_group_id, created_at):
+        sql = """
+        INSERT INTO courses (name, description, for_man_group_id, for_woman_group_id, created_at)
+        VALUES ($1, $2, $3, $4, $5) returning *;
+        """
+        return await self.execute(sql, name, description, for_man_group_id, for_woman_group_id, created_at, fetchrow=True)
+
+    async def select_all_courses(self):
+        sql = """
+            SELECT * FROM courses order by created_at desc;
+        """
+        data = await self.execute(sql, fetch=True)
+        return [
+            {
+                "id": item[0],
+                "name": item[1],
+                "description": item[2],
+                "for_man_group_id": item[3],
+                "for_woman_group_id": item[4],
+                "created_at": item[5],
+            } for item in data
+        ] if data else None
+
+    async def select_course(self, **kwargs):
+        sql = """
+            SELECT * FROM courses WHERE 
+        """
+        sql, parameters = self.format_args(sql, parameters=kwargs)
+        data = await self.execute(sql, *parameters, fetchrow=True)
+        return {
+            "id": data[0],
+            "name": data[1],
+            "description": data[2],
+            "for_man_group_id": data[3],
+            "for_woman_group_id": data[4],
+            "created_at": data[5],
+        } if data else None
+
     # For questions
 
     async def add_question(self, sender_id, sender_full_name, question, created_at):
