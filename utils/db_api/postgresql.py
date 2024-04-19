@@ -70,14 +70,49 @@ class Database:
         sql = """
             CREATE TABLE IF NOT EXISTS questions (
                 id SERIAL PRIMARY KEY,
-                sender_id BIGINT NOT NULL,
+                user_id INT FOREIGN KEY REFERENCES users(telegram_id),
                 sender_full_name VARCHAR(255) NOT NULL,
                 question VARCHAR(255) NOT NULL,
                 answer VARCHAR(255) NULL,
-                respondent_id BIGINT NULL,
                 respondent_full_name VARCHAR(255) NULL,
+                response_date timestamp with time zone null,
                 created_at timestamp with time zone NOT NULL DEFAULT NOW()
             );
+        """
+        await self.execute(sql, execute=True)
+
+    async def create_table_applications(self):
+        sql = """
+        CREATE TABLE IF NOT EXISTS applications(
+            id SERIAL PRIMARY KEY,
+            user_id INT FOREIGN KEY REFERENCES users(telegram_id),
+            course_id INT FOREIGN KEY REFERENCES courses(id),
+            is_accepted BOOL NONE,
+            is_enter_group BOOL NONE,
+            applied_date timestamp with time zone NULL,
+            created_at timestamp with time zone NOT NULL DEFAULT NOW()
+        );
+        """
+        await self.execute(sql, execute=True)
+
+    async def create_table_courses(self):
+        sql = """
+        CREATE TABLE IF NOT EXISTS courses (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(255),
+            description VARCHAR(255),
+            created_at timestamp with time zone NOT NULL DEFAULT NOW()
+        );
+        """
+        await self.execute(sql, execute=True)
+
+    async def create_table_enrollments(self):
+        sql = """
+            CREATE TABLE IF NOT EXISTS enrollments(
+                id SERIAL PRIMARY KEY,
+                user_id INT FOREIGN KEY REFERENCES users(telegram_id),
+                course_id INT FOREIGN KEY REFERENCES courses(id)    
+            )
         """
         await self.execute(sql, execute=True)
 
@@ -89,6 +124,7 @@ class Database:
         ])
         return sql, tuple(parameters.values())
 
+    # For groups
     async def add_group(self, by_user_id, by_user_name, group_id, group_name, created_at, for_whom):
         sql = """
             INSERT INTO groups (by_user_id, by_user_name, group_id, group_name, created_at, for_whom) 
@@ -144,6 +180,8 @@ class Database:
         sql, parameters = self.format_args(sql, parameters=kwargs)
         await self.execute(sql, *parameters, execute=True)
 
+    # For questions
+
     async def add_question(self, sender_id, sender_full_name, question, created_at):
         sql = """
             INSERT INTO questions (sender_id, sender_full_name, question, created_at)
@@ -173,6 +211,7 @@ class Database:
             "created_at": data[7]
         } if data else None
 
+    # For users
     async def add_user(self, full_name, username, telegram_id, created_at):
         sql = "INSERT INTO users (full_name, username, telegram_id, created_at) VALUES($1, $2, $3, $4) returning *"
         return await self.execute(sql, full_name, username, telegram_id, created_at, fetchrow=True)
