@@ -113,7 +113,8 @@ class Database:
             CREATE TABLE IF NOT EXISTS enrollments(
                 id SERIAL PRIMARY KEY,
                 user_id INT FOREIGN KEY REFERENCES users(telegram_id),
-                course_id INT FOREIGN KEY REFERENCES courses(id)    
+                course_id INT FOREIGN KEY REFERENCES courses(id),  
+                created_at timestamp with time zone NOT NULL DEFAULT NOW()
             )
         """
         await self.execute(sql, execute=True)
@@ -249,8 +250,29 @@ class Database:
             "created_at": data[5],
         } if data else None
 
-    # For questions
+    # For enrollments
+    async def add_enrollment(self, user_id, course_id, created_at):
+        sql = """
+        INSERT INTO enrollments (user_id, course_id, created_at)
+        VALUES ($1, $2, $3) returning *;
+        """
+        return await self.execute(sql, user_id, course_id, created_at, fetchrow=True)
 
+    async def select_all_enrollments(self):
+        sql = """
+            SELECT * FROM enrollments order by created_at desc;
+        """
+        data = await self.execute(sql, fetch=True)
+        return [
+            {
+                "id": item[0],
+                "user_id": item[1],
+                "course_id": item[2],
+                "created_at": item[3],
+            } for item in data
+        ] if data else None
+
+    # For questions
     async def add_question(self, sender_id, sender_full_name, question, created_at):
         sql = """
             INSERT INTO questions (sender_id, sender_full_name, question, created_at)
