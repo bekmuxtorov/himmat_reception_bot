@@ -101,6 +101,8 @@ class Database:
             id SERIAL PRIMARY KEY,
             name VARCHAR(255),
             description VARCHAR(255),
+            for_man_group_id varchar(255),
+            for_woman_group_id varchar(255), 
             created_at timestamp with time zone NOT NULL DEFAULT NOW()
         );
         """
