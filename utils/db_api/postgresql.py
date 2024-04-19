@@ -180,6 +180,34 @@ class Database:
         sql, parameters = self.format_args(sql, parameters=kwargs)
         await self.execute(sql, *parameters, execute=True)
 
+    # For applications
+    async def add_application(self, user_id, course_id, created_at):
+        sql = """
+            INSERT INTO applications (user_id, course_id, created_at)
+            VALUEST ($1, $2, $3) returning *;
+        """
+        return await self.execute(sql, user_id, course_id, created_at, fetchrow=True)
+
+    async def update_application_field(self, application_id, field_name, value):
+        sql = f"UPDATE applications SET {field_name}=$3 WHERE id=$1"
+        return await self.execute(sql, application_id, field_name, value, execute=True)
+
+    async def select_application(self, **kwargs):
+        sql = """
+            SELECT * FROM applications WHERE 
+        """
+        sql, parameters = self.format_args(sql, parameters=kwargs)
+        data = await self.execute(sql, *parameters, fetchrow=True)
+        return {
+            "id": data[0],
+            "user_id": data[1],
+            "course_id": data[2],
+            "is_accepted": data[3],
+            "is_enter_group": data[4],
+            "applied_date": data[5],
+            "created_at": data[6]
+        } if data else None
+
     # For questions
 
     async def add_question(self, sender_id, sender_full_name, question, created_at):
