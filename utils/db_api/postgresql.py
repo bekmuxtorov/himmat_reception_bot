@@ -119,6 +119,19 @@ class Database:
         """
         await self.execute(sql, execute=True)
 
+    async def create_table_topics(self):
+        sql = """
+        CREATE TABLE IF NOT EXISTS topics(
+        id SERIAL PRIMARY KEY,
+        topic_id BIGINT NOT NULL,
+        topic_name VARCHAR(255) NULL,
+        topic_created_group_id BIGINT NOT NULL,
+        created_at timestamp with time zone NOT NULL DEFAULT NOW(),
+        for_purpose VARCHAR(255) NULL
+        );
+        """
+        await self.execute(sql, execute=True)
+
     @staticmethod
     def format_args(sql, parameters: dict):
         sql += " AND ".join([
@@ -340,3 +353,32 @@ class Database:
 
     async def drop_users(self):
         await self.execute("DROP TABLE Users", execute=True)
+
+    # for topics
+    async def add_topic(self, topic_id, topic_name, topic_created_group_id, created_at, for_purpose):
+        sql = """
+            INSERT INTO topics (topic_id, topic_name, topic_created_group_id, created_at, for_purpose) 
+            VALUES ($1, $2, $3, $4, $5) returning *;
+        """
+        return await self.execute(sql, topic_id, topic_name, topic_created_group_id, created_at, for_purpose, fetchrow=True)
+
+    async def select_topic(self, **kwargs):
+        sql = """
+            SELECT * FROM topics  WHERE 
+        """
+        sql, parameters = self.format_args(sql, parameters=kwargs)
+        data = await self.execute(sql, *parameters, fetchrow=True)
+        return {
+            "id": data[0],
+            "topic_id": data[1],
+            "topic_name": data[2],
+            "topic_created_group_id": data[3],
+            "created_at": data[4],
+            "for_purpose": data[5]
+        } if data else None
+
+    async def get_topic_id(self, group_id, for_purpose):
+        sql = """
+            SELECT topic_id FROM topics WHERE topic_created_group_id=$1 and for_purpose=$2 LIMIT 1;
+        """
+        return await self.execute(sql, group_id, for_purpose, fetchval=True)

@@ -20,6 +20,12 @@ class IsGroupAdmin(BoundFilter):
         return member.is_chat_admin()
 
 
+class IsGroupMember(BoundFilter):
+    async def check(self, message: types.Message) -> bool:
+        member = await message.chat.get_member(message.from_user.id)
+        return member.is_chat_member()
+
+
 class IsAdminInAdminGroups(BoundFilter):
     async def check(self, message: types.Message) -> bool:
         groups = [FOR_WOMAN_ADMINS, FOR_MAN_ADMINS]

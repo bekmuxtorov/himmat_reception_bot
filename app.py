@@ -15,6 +15,8 @@ async def on_startup(dispatcher):
     await db.create_table_groups()
     await db.create_table_questions()
     await db.create_table_courses()
+    await db.create_table_topics()
+
 
     # Birlamchi komandalar (/star va /help)
     await set_default_commands(dispatcher)

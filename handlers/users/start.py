@@ -39,7 +39,7 @@ async def bot_start(message: types.Message):
     groups = await db.select_all_groups()
     if groups:
         for item in groups:
-            group = item["group_id"]
+            group = item.get("group_id")
             if await is_member(bot=bot, group=group, user_id=user_id):
                 await message.answer(f"Assalomu alekum, {message.from_user.full_name}\n\nOldingi guruhlarda qatnashganligiz uchun loyihada qayta qatnasha olmaysiz!\n\n{'-'*10}\n#TODO\nShu yerga mos matn yozish kerak")
                 return
