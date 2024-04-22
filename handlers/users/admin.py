@@ -9,10 +9,10 @@ from filters.is_group import IsGroup, IsGroupAdmin, IsGroupCall
 from filters.is_private import IsPrivate
 from loader import dp, db, bot
 from utils import get_now, create_referral_link, const_texts
-from keyboards.default.default_buttons import make_buttons
+from keyboards.default.default_buttons import make_buttons, admin_buttons
 from states.for_admin import AcceptApp, CancelApp, MessageToUser, AnswerToUser, AddGroup
 from data.config import DAYS, MEMBER_LIMIT
-from utils.const_texts import send_message_to_admin_text, submit_application, add_group, add_course, find_user
+from utils.const_texts import send_message_to_admin_text, submit_application, add_group, add_course, find_user, list_group
 
 # Add group
 
@@ -46,14 +46,7 @@ async def add_group(message: types.Message, state: FSMContext):
     if data:
         await message.answer(
             text=f"ℹ️ {data.get('group_name')}[{data.get('group_id')}] guruhi bazaga qo'shilgan.",
-            reply_markup=make_buttons(
-                words=[
-                    add_group,
-                    add_course,
-                    find_user,
-                ],
-                row_width=2
-            )
+            reply_markup=admin_buttons
         )
         return
 
@@ -98,11 +91,29 @@ async def add_group(message: types.Message, state: FSMContext):
         for_whom=for_whom
     )
     await message.answer(
-        text=f"✅ Guruh muaffaqiyatli qo'shildi!"
+        text=f"✅ Guruh muaffaqiyatli qo'shildi!",
+        reply_markup=admin_buttons
     )
+    await state.finish()
+
+
+@dp.message_handler(IsPrivate(), text=list_group)
+async def add_group(message: types.Message):
+    data = await db.select_all_groups()
+    text = "-- Guruhlar --\n\n"
+    for item in data:
+        text += f"<b>ID:</b> <code>{item.get('group_id')}</code>\n"
+        text += f"<b>Nomi:</b> {item.get('group_name')}\n"
+        text += f"<b>Kimlar uchun:</b> {item.get('for_whom')}\n"
+        text += f"<b>Vaqt:</b> {item.get('created_at')}\n"
+        text += f"<b>Qo'shgan admin:</b> {item.get('by_user_name')}\n\n"
+    await message.answer(text=text, reply_markup=admin_buttons)
 
 
 # end add group
+
+
+# Add course
 
 
 async def accept_app(message: types.Message, payload: str, state: FSMContext = AcceptApp.first_data):

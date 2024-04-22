@@ -136,14 +136,17 @@ class Database:
         return await self.execute(sql, by_user_id, by_user_name, group_id, group_name, created_at, for_whom, fetchrow=True)
 
     async def select_all_groups(self):
-        sql = "SELECT * FROM groups WHERE for_whom in ('man_users', 'woman_users');"
+        sql = "SELECT * FROM groups WHERE for_whom in ('man_users', 'woman_users', 'mixed_users');"
         data = await self.execute(sql, fetch=True)
         return [
             {
+                "id": item[0],
                 "by_user_name": item[2],
                 "group_id": item[3],
                 "group_name": item[4],
                 "created_at": item[5],
+                "for_whom": item[6],
+
             } for item in data
         ] if data else None
 
