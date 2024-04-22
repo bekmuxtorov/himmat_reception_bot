@@ -6,6 +6,13 @@ class AddGroup(StatesGroup):
     for_whom = State()
 
 
+class AddCource(StatesGroup):
+    name = State()
+    description = State()
+    for_man_group_id = State()
+    for_woman_group_id = State()
+
+
 class AcceptApp(StatesGroup):
     first_data = State()
     confirm = State()

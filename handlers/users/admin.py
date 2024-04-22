@@ -5,14 +5,20 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 from datetime import datetime, timedelta
 
-from filters.is_group import IsGroup, IsGroupAdmin, IsGroupCall
+from filters.is_group import IsAdminInAdminGroups
 from filters.is_private import IsPrivate
 from loader import dp, db, bot
 from utils import get_now, create_referral_link, const_texts
 from keyboards.default.default_buttons import make_buttons, admin_buttons
-from states.for_admin import AcceptApp, CancelApp, MessageToUser, AnswerToUser, AddGroup
+from states.for_admin import AcceptApp, CancelApp, MessageToUser, AnswerToUser, AddGroup, AddCource
 from data.config import DAYS, MEMBER_LIMIT
 from utils.const_texts import send_message_to_admin_text, submit_application, add_group, add_course, find_user, list_group
+
+
+@dp.message_handler(IsPrivate(), text="❌ Bekor qilish", state="*")
+async def bot_start(message: types.Message, state: FSMContext):
+    await message.answer("💡 Jarayon bekor qilindi!", reply_markup=admin_buttons)
+    await state.finish()
 
 # Add group
 
@@ -114,6 +120,176 @@ async def add_group(message: types.Message):
 
 
 # Add course
+
+"""
+Course ochish
+    --name
+    --description
+    --for_man_group_id
+    --for_woman_group_id
+    --created_at
+"""
+
+
+@dp.message_handler(IsAdminInAdminGroups(), IsPrivate(), text=add_course)
+async def add_cource(message: types.Message):
+    await message.answer(
+        text="Kurs uchun nom kiriting:",
+        reply_markup=make_buttons(
+            words=["❌ Bekor qilish"]
+        )
+    )
+    await AddCource.name.set()
+
+
+@dp.message_handler(IsPrivate(), state=AddCource.name)
+async def add_cource(message: types.Message, state: FSMContext):
+    name = message.text
+    print('='*20)
+    print(name)
+    print('='*20)
+    await state.update_data(name=name)
+    await message.answer(
+        text="Kurs uchun qisqacha tavsif yozing:",
+        reply_markup=make_buttons(
+            words=["❌ Bekor qilish"]
+        )
+    )
+    await AddCource.description.set()
+
+
+@dp.message_handler(IsPrivate(), state=AddCource.description)
+async def add_cource(message: types.Message, state: FSMContext):
+    description = message.text
+    await state.update_data(description=description)
+    await message.answer(
+        text="Erkaklar uchun guruhning ID sini kiriting:\n\nGuruhning ID'sini @raw_data_bot yordamida olishingiz mumkin",
+        reply_markup=make_buttons(
+            words=["❌ Bekor qilish"]
+        )
+    )
+    await AddCource.for_man_group_id.set()
+
+
+@dp.message_handler(IsPrivate(), state=AddCource.for_man_group_id)
+async def add_cource(message: types.Message, state: FSMContext):
+    try:
+        for_man_group_id = int(message.text)
+    except:
+        await message.answer(
+            text="Iltimos guruh ID'sini to'g'ri holatda kiriting.",
+            reply_markup=make_buttons(
+                words=["❌ Bekor qilish"]
+            )
+        )
+        return
+
+    data = await db.select_group(group_id=for_man_group_id)
+    if data:
+        await message.answer(
+            text=f"ℹ️ {data.get('group_name')}[{data.get('group_id')}] guruhi bazaga qo'shilgan.\n\nBoshqa guruh tashkil qilib uning ID'sini yuborishingiz mumkin.",
+            reply_markup=admin_buttons
+        )
+        return
+    await state.update_data(for_man_group_id=for_man_group_id)
+    await message.answer(
+        text="Ayollar uchun guruhning ID sini kiriting:\n\nGuruhning ID'sini @raw_data_bot yordamida olishingiz mumkin",
+        reply_markup=make_buttons(
+            words=["❌ Bekor qilish"]
+        )
+    )
+    await AddCource.for_woman_group_id.set()
+
+
+@dp.message_handler(IsPrivate(), state=AddCource.for_woman_group_id)
+async def add_cource(message: types.Message, state: FSMContext):
+    try:
+        for_woman_group_id = int(message.text)
+    except:
+        await message.answer(
+            text="Iltimos guruh ID'sini to'g'ri holatda kiriting.",
+            reply_markup=make_buttons(
+                words=["❌ Bekor qilish"]
+            )
+        )
+        return
+
+    data = await db.select_group(group_id=for_woman_group_id)
+    if data:
+        await message.answer(
+            text=f"ℹ️ {data.get('group_name')}[{data.get('group_id')}] guruhi bazaga qo'shilgan.\n\nBoshqa guruh tashkil qilib uning ID'sini yuborishingiz mumkin.",
+            reply_markup=admin_buttons
+        )
+        return
+
+    cource_data = await state.get_data()
+    name = cource_data.get("name")
+    description = cource_data.get("description")
+
+    for_man_group_id = cource_data.get("for_man_group_id")
+    created_at = await get_now()
+
+    await db.add_course(
+        name=name,
+        description=description,
+        for_man_group_id=str(for_man_group_id),
+        for_woman_group_id=str(for_woman_group_id),
+        created_at=created_at
+    )
+    await db.add_group(
+        by_user_id=message.from_user.id,
+        by_user_name=message.from_user.full_name,
+        group_id=for_man_group_id,
+        group_name=None,
+        created_at=created_at,
+        for_whom="man_users"
+    )
+
+    await db.add_group(
+        by_user_id=message.from_user.id,
+        by_user_name=message.from_user.full_name,
+        group_id=for_woman_group_id,
+        group_name=None,
+        created_at=created_at,
+        for_whom="woman_users"
+    )
+
+    text = "✅ Kurs muvaffaqiyatli yaratildi.\n\n-- Barcha ma'lumotlar: --\n\n"
+    text += f"<b>Nomi:</b> {name}\n"
+    text += f"<b>Tavsif:</b> {description}\n"
+    text += f"<b>Yaratgan admin:</b> {message.from_user.full_name}\n"
+    text += f"<b>Yaratilgan:</b> {created_at}\n"
+    text += f"<b>Erkaklar uchun guruh ID:</b> <code>{for_man_group_id}</code>\n"
+    text += f"<b>Ayollar uchun guruh ID:</b> <code>{for_woman_group_id}</code>\n"
+    await message.answer(
+        text=text,
+        reply_markup=admin_buttons
+    )
+
+
+# @dp.message_handler(IsPrivate(), text="create_topic")
+# async def create_topic(message: types.Message):
+#     await message.answer("Test uchun topic yaratish boshlandi.")
+#     data = await bot.create_forum_topic(chat_id=-1002117894380, name="Test uchun topic")
+#     print(data)
+#     await message.answer("Test uchun topic yaratish tugadi.")
+
+
+@dp.message_handler(IsPrivate(), state=AddCource.for_man_group_id)
+async def add_cource(message: types.Message, state: FSMContext):
+    try:
+        for_man_group_id = int(message.text)
+    except:
+        await message.answer("Iltimos guruh ID'sini to'g'ri holatda kiriting")
+        return
+    await state.update_data(for_man_group_id=for_man_group_id)
+    await message.answer(
+        text="Erkaklar uchun guruhning ID sini kiriting:\n\nGuruhning ID'sini @raw_data_bot yordamida olishingiz mumkin",
+        reply_markup=make_buttons(
+            words=["❌ Bekor qilish"]
+        )
+    )
+    await AddCource.for_man_group_id.set()
 
 
 async def accept_app(message: types.Message, payload: str, state: FSMContext = AcceptApp.first_data):
