@@ -16,3 +16,6 @@ DB_HOST = env.str("DB_HOST")
 
 DAYS = env.int("DAYS")
 MEMBER_LIMIT = env.int("MEMBER_LIMIT")
+
+FOR_MAN_ADMINS = env.int("FOR_MAN_ADMINS")
+FOR_WOMAN_ADMINS = env.int("FOR_WOMAN_ADMINS")
