@@ -8,7 +8,7 @@ from utils.define_is_member import is_member
 from utils.const_texts import submit_application, add_group, add_course, find_user
 
 from filters.is_private import IsPrivate
-from keyboards.default.default_buttons import make_buttons
+from keyboards.default.default_buttons import make_buttons, admin_buttons
 from utils import get_now, is_admin
 from .admin import accept_app, cancel_app, message_to_user, answer_to_question
 from states.for_admin import CancelApp
@@ -31,14 +31,7 @@ async def bot_start(message: types.Message):
     if await is_admin(bot, message.from_user.id):
         await message.answer(
             text=f"Hurmatli {message.from_user.full_name} siz botni admin sifatida ishlata olasiz.\n\nO'zingizni kerakli bo'limni tanlang:",
-            reply_markup=make_buttons(
-                words=[
-                    add_group,
-                    add_course,
-                    find_user,
-                ],
-                row_width=2
-            )
+            reply_markup=admin_buttons
         )
         return
 

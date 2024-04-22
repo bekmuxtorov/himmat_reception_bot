@@ -1,4 +1,5 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from utils.const_texts import add_course, add_group, find_user, list_group
 
 
 def make_buttons(words: list, row_width: int = 1) -> ReplyKeyboardMarkup:
@@ -8,3 +9,14 @@ def make_buttons(words: list, row_width: int = 1) -> ReplyKeyboardMarkup:
         if word is not None:
             buttons_group.insert(KeyboardButton(text=word))
     return buttons_group
+
+
+admin_buttons = make_buttons(
+    words=[
+        add_group,
+        add_course,
+        find_user,
+        list_group
+    ],
+    row_width=2
+)
