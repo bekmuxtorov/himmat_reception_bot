@@ -1,6 +1,11 @@
 from aiogram.dispatcher.filters.state import State, StatesGroup
 
 
+class AddGroup(StatesGroup):
+    submit_id = State()
+    for_whom = State()
+
+
 class AcceptApp(StatesGroup):
     first_data = State()
     confirm = State()

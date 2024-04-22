@@ -70,7 +70,7 @@ class Database:
         sql = """
             CREATE TABLE IF NOT EXISTS questions (
                 id SERIAL PRIMARY KEY,
-                user_id INT FOREIGN KEY REFERENCES users(telegram_id),
+                user_id INT REFERENCES users(telegram_id),
                 sender_full_name VARCHAR(255) NOT NULL,
                 question VARCHAR(255) NOT NULL,
                 answer VARCHAR(255) NULL,

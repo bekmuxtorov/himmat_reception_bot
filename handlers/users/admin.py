@@ -10,94 +10,99 @@ from filters.is_private import IsPrivate
 from loader import dp, db, bot
 from utils import get_now, create_referral_link, const_texts
 from keyboards.default.default_buttons import make_buttons
-from states.for_admin import AcceptApp, CancelApp, MessageToUser, AnswerToUser
+from states.for_admin import AcceptApp, CancelApp, MessageToUser, AnswerToUser, AddGroup
 from data.config import DAYS, MEMBER_LIMIT
-from utils.const_texts import send_message_to_admin_text, submit_application
+from utils.const_texts import send_message_to_admin_text, submit_application, add_group, add_course, find_user
+
+# Add group
+
+"""
+Guruh qo'shish
+    - Guruhning id sini kiriting(Guruhning id'sini ...bot' yordamida olishingiz mumkin):
+    - Guruh kimlar uchun[Faqat erkak, faqat ayol, Aralash]
+    - Guruh success qo'shildi
+"""
 
 
-@dp.message_handler(IsGroupAdmin(), IsGroup(), commands=["group_for_man_users", "group_for_woman_users"])
+@dp.message_handler(IsPrivate(), text=add_group)
 async def add_group(message: types.Message):
-    command = message.get_command()
-    if '@' in command:
-        needly_message = command.split("@")[0]
-        command_items = needly_message.split('_')
-    else:
-        command_items = command.split('_')
-    for_whom = command_items[2] + "_" + command_items[3]
-    group_data = message.chat
-    user_data = message.from_user
-    data = await db.select_group(group_id=group_data.id)
+    await message.answer(
+        text="Guruhning ID sini kiriting:\n\nGuruhning ID'sini @raw_data_bot yordamida olishingiz mumkin",
+        reply_markup=make_buttons(
+            words=["❌ Bekor qilish"]
+        )
+    )
+    await AddGroup.submit_id.set()
+
+
+@dp.message_handler(IsPrivate(), state=AddGroup.submit_id)
+async def add_group(message: types.Message, state: FSMContext):
+    try:
+        group_id = int(message.text)
+    except:
+        await message.answer("Iltimos guruh ID'sini to'g'ri holatda kiriting")
+        return
+    data = await db.select_group(group_id=group_id)
     if data:
-        service_message = await message.answer(f"ℹ️ {data.get('group_name')} guruhi bazaga qo'shilgan.")
-        await asyncio.sleep(12)
-        await message.delete()
-        await service_message.delete()
+        await message.answer(
+            text=f"ℹ️ {data.get('group_name')}[{data.get('group_id')}] guruhi bazaga qo'shilgan.",
+            reply_markup=make_buttons(
+                words=[
+                    add_group,
+                    add_course,
+                    find_user,
+                ],
+                row_width=2
+            )
+        )
         return
 
+    await state.update_data(group_id=group_id)
+    await message.answer(
+        text="Guruh kimlar uchun:\n\nQuyidan tanlang.",
+        reply_markup=make_buttons(
+            words=["Erkaklar uchun", "Ayollar uchun", "Barcha uchun"],
+            row_width=2
+        )
+    )
+    await AddGroup.for_whom.set()
+
+
+@dp.message_handler(IsPrivate(), state=AddGroup.for_whom)
+async def add_group(message: types.Message, state: FSMContext):
+    text = message.text
+    if not text in ["Erkaklar uchun", "Ayollar uchun", "Barcha uchun"]:
+        await message.answer(
+            text="Iltimos quyidagilarni birini tanglang:",
+            reply_markup=make_buttons(
+                words=["Erkaklar uchun", "Ayollar uchun", "Barcha uchun"],
+                row_width=2
+            )
+        )
+        return
+    if text == "Erkaklar uchun":
+        for_whom = "man_users"
+    elif text == "Ayollar uchun":
+        for_whom = "woman_users"
+    elif text == "Barcha uchun":
+        for_whom = "mixed_users"
+
+    group_data = await state.get_data()
+    group_id = group_data.get("group_id")
     await db.add_group(
-        by_user_id=user_data.id,
-        by_user_name=user_data.full_name,
-        group_id=group_data.id,
-        group_name=group_data.full_name,
+        by_user_id=message.from_user.id,
+        by_user_name=message.from_user.full_name,
+        group_id=group_id,
+        group_name=None,
         created_at=await get_now(),
         for_whom=for_whom
     )
-    service_message = await message.answer(
+    await message.answer(
         text=f"✅ Guruh muaffaqiyatli qo'shildi!"
     )
-    await asyncio.sleep(12)
-    await message.delete()
-    await service_message.delete()
 
 
-@dp.message_handler(IsGroupAdmin(), IsGroup(), commands=['group_for_man_admin', 'group_for_woman_admin'])
-async def send_ad_to_all(message: types.Message):
-    command = message.get_command()
-    if '@' in command:
-        needly_message = command.split("@")[0]
-        command_items = needly_message.split('_')
-    else:
-        command_items = command.split('_')
-    for_whom = command_items[2] + "_" + command_items[3]
-    gender = "Erkak" if command_items[2] == "man" else "Ayol"
-    group_data = message.chat
-    user_data = message.from_user
-    data = await db.select_group(group_id=group_data.id)
-    if data:
-        for_whom = data.get("for_whom")
-        if for_whom == "man_admin":
-            service_message = await message.answer(f"ℹ️ <b>{group_data.full_name}</b> guruhi erkaklar uchun admin guruhi sifatida qo'shilgan.")
-        else:
-            service_message = await message.answer(f"ℹ️ <b>{group_data.full_name}</b> guruhi ayollar uchun admin guruhi sifatida qo'shilgan.")
-        await asyncio.sleep(12)
-        await message.delete()
-        await service_message.delete()
-        return
-
-    await db.delete_group(for_whom=for_whom)
-
-    await db.add_group(
-        by_user_id=user_data.id,
-        by_user_name=user_data.full_name,
-        group_id=group_data.id,
-        group_name=group_data.full_name,
-        created_at=await get_now(),
-        for_whom=for_whom
-    )
-    service_message = await message.answer(
-        text=f"✅ {gender}lar uchun admin guruh muaffaqiyatli qo'shildi!"
-    )
-    await asyncio.sleep(12)
-    await message.delete()
-    await service_message.delete()
-
-
-@dp.message_handler(IsGroup(), commands=['group_for_man_admin', 'group_for_woman_admin', 'group_for_man_users', 'group_for_woman_users'])
-async def send_ad_to_all(message: types.Message):
-    service_message = await message.answer("⚡ Ushbu buyruqni faqat guruh adminlari ishlata oladi.")
-    await asyncio.sleep(12)
-    await message.delete()
-    await service_message.delete()
+# end add group
 
 
 async def accept_app(message: types.Message, payload: str, state: FSMContext = AcceptApp.first_data):
@@ -311,3 +316,11 @@ async def cancel_app_ca(message: types.Message, state: FSMContext):
         message_id=message_id
     )
     await state.finish()
+
+
+@dp.message_handler(IsPrivate(), text="create_topic")
+async def create_topic(message: types.Message):
+    await message.answer("Test uchun topic yaratish boshlandi.")
+    data = await bot.create_forum_topic(chat_id=-1002117894380, name="Test uchun topic")
+    print(data)
+    await message.answer("Test uchun topic yaratish tugadi.")

@@ -1,6 +1,7 @@
 from . import db_api
 from . import misc
 from . import define_is_member
+from .define_is_member import is_admin
 from . import const_texts
 from . import set_message
 from .get_now_date import get_now
