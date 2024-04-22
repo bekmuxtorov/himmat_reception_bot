@@ -5,11 +5,11 @@ from aiogram.utils.deep_linking import decode_payload
 
 from loader import dp, db, bot
 from utils.define_is_member import is_member
-from utils.const_texts import submit_application
+from utils.const_texts import submit_application, add_group, add_course, find_user
 
 from filters.is_private import IsPrivate
 from keyboards.default.default_buttons import make_buttons
-from utils import get_now
+from utils import get_now, is_admin
 from .admin import accept_app, cancel_app, message_to_user, answer_to_question
 from states.for_admin import CancelApp
 
@@ -27,6 +27,21 @@ async def bot_start(message: types.Message):
         elif "question" in payload:
             await answer_to_question(message=message, payload=payload)
         return
+
+    if await is_admin(bot, message.from_user.id):
+        await message.answer(
+            text=f"Hurmatli {message.from_user.full_name} siz botni admin sifatida ishlata olasiz.\n\nO'zingizni kerakli bo'limni tanlang:",
+            reply_markup=make_buttons(
+                words=[
+                    add_group,
+                    add_course,
+                    find_user,
+                ],
+                row_width=2
+            )
+        )
+        return
+
     user_id = message.from_user.id
     groups = await db.select_all_groups()
     if groups:
