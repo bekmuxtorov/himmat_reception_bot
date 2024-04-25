@@ -1,5 +1,5 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
-from utils.const_texts import add_course, add_group, find_user, list_group
+from utils.const_texts import add_course, add_group, find_user, list_group, list_course
 
 
 def make_buttons(words: list, row_width: int = 1) -> ReplyKeyboardMarkup:
@@ -16,7 +16,8 @@ admin_buttons = make_buttons(
         add_group,
         add_course,
         find_user,
-        list_group
+        list_group,
+        list_course
     ],
     row_width=2
 )
