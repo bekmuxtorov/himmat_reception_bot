@@ -5,14 +5,14 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 from datetime import datetime, timedelta
 
-from filters.is_group import IsAdminInAdminGroups, IsGroupMember
+from filters.is_group import IsAdminInAdminGroups, IsGroupMember, IsMemberInAdminGroups
 from filters.is_private import IsPrivate
 from loader import dp, db, bot
 from utils import get_now, create_referral_link, const_texts
 from keyboards.default.default_buttons import make_buttons, admin_buttons
 from states.for_admin import AcceptApp, CancelApp, MessageToUser, AnswerToUser, AddGroup, AddCource
 from data.config import DAYS, MEMBER_LIMIT
-from utils.const_texts import send_message_to_admin_text, submit_application, add_group, add_course, find_user, list_group
+from utils.const_texts import send_message_to_admin_text, submit_application, add_group, add_course, find_user, list_group, list_course
 from .send_message_to_admin import send_message_to_admin_via_topic
 
 
@@ -104,7 +104,8 @@ async def add_group(message: types.Message, state: FSMContext):
     await state.finish()
 
 
-@dp.message_handler(IsPrivate(), text=list_group)
+@dp.message_handler(IsMemberInAdminGroups(), commands="groups")
+@dp.message_handler(IsMemberInAdminGroups(), IsPrivate(), text=list_group)
 async def add_group(message: types.Message):
     data = await db.select_all_groups()
     text = "-- Guruhlar --\n\n"
@@ -115,7 +116,6 @@ async def add_group(message: types.Message):
         text += f"<b>Vaqt:</b> {item.get('created_at')}\n"
         text += f"<b>Qo'shgan admin:</b> {item.get('by_user_name')}\n\n"
     await message.answer(text=text, reply_markup=admin_buttons)
-    await send_message_to_admin_via_topic(text=text, for_purpose="added_groups")
 
 
 # end add group
@@ -131,6 +131,21 @@ Course ochish
     --for_woman_group_id
     --created_at
 """
+
+
+@dp.message_handler(IsMemberInAdminGroups(), commands="courses")
+@dp.message_handler(IsPrivate(), text=list_course)
+async def add_group(message: types.Message):
+    data = await db.select_all_courses()
+    text = "-- Kurslar --\n\n"
+    for item in data:
+        text += f"<b>ID:</b> <code>{item.get('id')}</code>\n"
+        text += f"<b>Nomi:</b> {item.get('name')}\n"
+        text += f"<b>Tavsif:</b> {item.get('description')}\n"
+        text += f"<b>Erkaklar uchun:</b> {item.get('for_man_group_id')}\n"
+        text += f"<b>Ayollar uchun:</b> {item.get('for_woman_group_id')}\n"
+        text += f"<b>Vaqt:</b> {item.get('created_at')}\n"
+    await message.answer(text=text, reply_markup=admin_buttons)
 
 
 @dp.message_handler(IsAdminInAdminGroups(), IsPrivate(), text=add_course)
