@@ -34,3 +34,13 @@ class IsAdminInAdminGroups(BoundFilter):
             member = await bot.get_chat_member(chat_id=group, user_id=message.from_user.id)
             status = status or member.is_chat_admin()
         return status
+
+
+class IsMemberInAdminGroups(BoundFilter):
+    async def check(self, message: types.Message) -> bool:
+        groups = [FOR_WOMAN_ADMINS, FOR_MAN_ADMINS]
+        status = False
+        for group in groups:
+            member = await bot.get_chat_member(chat_id=group, user_id=message.from_user.id)
+            status = status or member.is_chat_member()
+        return status
