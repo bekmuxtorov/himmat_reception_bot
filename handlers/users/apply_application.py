@@ -4,11 +4,13 @@ from aiogram.dispatcher import FSMContext
 
 from loader import dp, bot, db
 from filters import IsPrivate
+from utils import get_now
 from utils.const_texts import submit_application, terms, send_message_to_admin_text
 from utils.set_message import set_message
 from keyboards.inline.inline_buttons import agree_buttons, button_for_admins_application, button_for_admins_question
 from keyboards.default.default_buttons import make_buttons
 from states.submit_application import SubmitApplication
+from .send_message_to_admin import send_message_to_admin_via_topic
 
 
 @dp.message_handler(IsPrivate(), text="❌ Bekor qilish", state="*")
@@ -47,7 +49,31 @@ async def submit_app(message: types.Message, state: FSMContext):
     gender = message.text
     await state.update_data(gender=gender)
     await db.update_user_gender(telegram_id=message.from_user.id, gender=gender)
-    await message.answer(text="👤 Ism va familiyani kiriting:", reply_markup=ReplyKeyboardRemove())
+    courses = await db.select_all_courses()
+    courses_name = [item.get("name")
+                    for item in courses] + ["❌ Bekor qilish"]
+    await message.answer(text="📃 Kurslardan birini tanglang:", reply_markup=make_buttons(words=courses_name))
+    await SubmitApplication.which_cource.set()
+
+
+@dp.message_handler(IsPrivate(), state=SubmitApplication.which_cource)
+async def submit_app(message: types.Message, state: FSMContext):
+    course_name = message.text
+    courses = await db.select_all_courses()
+    courses_name = {item.get("name"): item.get("id") for item in courses}
+    print(courses_name)
+    if not course_name in courses_name.keys():
+        await message.answer(
+            text="📝 Iltimos quyidagilardan biri tanglang:",
+            reply_markup=make_buttons(
+                words=courses_name.keys() + "❌ Bekor qilish"
+            )
+        )
+        return
+    course_id = courses_name.get(course_name)
+    await state.update_data(course_id=course_id)
+    await state.update_data(course_name=course_name)
+    await message.answer("📝 Ism va familiyangizni kiriting:", reply_markup=ReplyKeyboardRemove())
     await SubmitApplication.full_name.set()
 
 
@@ -82,59 +108,53 @@ async def submit_app(call: types.CallbackQuery, state: FSMContext):
 @dp.callback_query_handler(text="agree_yes", state=SubmitApplication.be_send)
 async def submit_app(call: types.CallbackQuery, state: FSMContext):
     await call.message.delete()
-    user_data = await state.get_data()
-    new_application = await set_message(user_data=user_data, to_admin=True)
-    message_status = await send_message_to_admin(gender=user_data.get("gender"), text=new_application, user_id=call.from_user.id, is_application=True)
-    if message_status:
-        await call.message.answer("✅ Arizangiz ko'rib chiqish uchun adminlar guruhiga yuborildi!\n\nTez orada qayta aloqaga chiqiladi.")
-        await state.finish()
-        return
-    await bot.send_message(chat_id=1603330179, text="⚡ Iltimos admin uchun guruhlarni biriktiring.")
-    await call.message.answer("ℹ️ Ariza jo'natishda muammo paydo bo'ldi, iltimos birozdan keyin qayta urinib ko'ring.", reply_markup=make_buttons(words=[f'{send_message_to_admin_text}', f"{submit_application}"], row_width=2))
-    await state.finish()
-
-
-async def get_group_id():
-    data_man = await db.select_group(for_whom="man_admin")
-    data_woman = await db.select_group(for_whom="woman_admin")
-    return {
-        "for_man": data_man.get("group_id") if data_man else None,
-        "for_woman": data_woman.get("group_id") if data_woman else None
-    }
-
-
-async def send_message_to_admin(gender: str, text: str, user_id: int, is_application: bool = False, question_id: int = None):
-    groups = await get_group_id()
-    if None in groups.values():
-        return False
-
-    if gender == "Erkak":
-        group_id = groups.get("for_man")
-        service_message = await bot.send_message(
-            chat_id=group_id,
-            text=text,
-            reply_markup=await button_for_admins_application(user_id=user_id) if is_application else await button_for_admins_question(question_id=question_id, chat_id=group_id, user_id=user_id)
-        )
-        await bot.edit_message_text(
-            text=text,
-            chat_id=group_id,
-            message_id=service_message.message_id,
-            disable_web_page_preview=True,
-            reply_markup=await button_for_admins_application(user_id=user_id, chat_id=group_id, message_id=service_message.message_id) if is_application else await button_for_admins_question(question_id=question_id, chat_id=group_id, message_id=service_message.message_id, user_id=user_id)
+    application_data = await state.get_data()
+    telegram_id = call.message.from_user.id
+    full_name = application_data.get("full_name")
+    username = call.message.from_user.username
+    gender = application_data.get("gender")
+    course_id = application_data.get("course_id")
+    course_name = application_data.get("course_name")
+    user = await db.select_user(telegram_id=telegram_id)
+    if not user:
+        user = await db.add_user(
+            full_name=full_name,
+            username=username,
+            telegram_id=telegram_id,
+            created_at=await get_now()
         )
     else:
-        group_id = groups.get("for_woman")
-        service_message = await bot.send_message(
-            chat_id=group_id,
-            text=text,
-            reply_markup=await button_for_admins_application(user_id=user_id, chat_id=group_id) if is_application else await button_for_admins_question(question_id=question_id, chat_id=group_id, user_id=user_id)
-        )
-        await bot.edit_message_text(
-            text=text,
-            chat_id=group_id,
-            message_id=service_message.message_id,
-            disable_web_page_preview=True,
-            reply_markup=await button_for_admins_application(user_id=user_id, chat_id=group_id, message_id=service_message.message_id) if is_application else await button_for_admins_question(question_id=question_id, chat_id=group_id, message_id=service_message.message_id, user_id=user_id)
-        )
+        if (username != user.get("username")) or (full_name != user.get("full_name")):
+            await db.update_user("username", username, telegram_id)
+            await db.update_user("full_name", full_name, telegram_id)
+            text = "📝 User ma'lumotlarini o'zgartirdi.\n\n"
+            text += f"👤 <b>FISH</b>: {full_name}\n"
+            text += f"🆔 <b>Telegram ID</b>: <code>{telegram_id}</code>\n"
+            text += f"👤 <b>Username</b>: {full_name}\n"
+            text += f"💡 <b>Jins</b>: {gender}"
+            await send_message_to_admin_via_topic(
+                text=text,
+                for_purpose="added_users"
+            )
+    await db.add_application(
+        user_id=int(user.get("id")),
+        course_id=int(course_id),
+        created_at=await get_now()
+    )
 
-    return True
+    user_data = {
+        "gender": gender,
+        "full_name": full_name,
+        "course_name": course_name
+    }
+    text = await set_message(user_data=user_data, to_admin=True)
+    await send_message_to_admin_via_topic(
+        gender=user_data.get("gender"),
+        for_purpose="arrived_applications",
+        text=text,
+        user_id=call.from_user.id,
+        is_application=True
+    )
+
+    await call.message.answer("✅ Arizangiz ko'rib chiqish uchun adminlar guruhiga yuborildi!\n\nTez orada qayta aloqaga chiqiladi.")
+    await state.finish()
