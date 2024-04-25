@@ -85,10 +85,10 @@ class Database:
         sql = """
         CREATE TABLE IF NOT EXISTS applications(
             id SERIAL PRIMARY KEY,
-            user_id INT FOREIGN KEY REFERENCES users(telegram_id),
-            course_id INT FOREIGN KEY REFERENCES courses(id),
-            is_accepted BOOL NONE,
-            is_enter_group BOOL NONE,
+            user_id INT REFERENCES users(id),
+            course_id INT REFERENCES courses(id),
+            is_accepted BOOL NULL,
+            is_enter_group BOOL NULL,
             applied_date timestamp with time zone NULL,
             created_at timestamp with time zone NOT NULL DEFAULT NOW()
         );
@@ -203,7 +203,7 @@ class Database:
     async def add_application(self, user_id, course_id, created_at):
         sql = """
             INSERT INTO applications (user_id, course_id, created_at)
-            VALUEST ($1, $2, $3) returning *;
+            VALUES ($1, $2, $3) returning *;
         """
         return await self.execute(sql, user_id, course_id, created_at, fetchrow=True)
 
@@ -321,7 +321,10 @@ class Database:
     # For users
     async def add_user(self, full_name, username, telegram_id, created_at):
         sql = "INSERT INTO users (full_name, username, telegram_id, created_at) VALUES($1, $2, $3, $4) returning *"
-        return await self.execute(sql, full_name, username, telegram_id, created_at, fetchrow=True)
+        data = await self.execute(sql, full_name, username, telegram_id, created_at, fetchrow=True)
+        return {
+            "id": data[0],
+        }
 
     async def select_all_users(self):
         sql = "SELECT * FROM users"
@@ -347,6 +350,10 @@ class Database:
     async def update_user_gender(self, gender, telegram_id):
         sql = "UPDATE users SET gender=$1 WHERE telegram_id=$2"
         return await self.execute(sql, gender, telegram_id, execute=True)
+
+    async def update_user(self, field, new_value, telegram_id):
+        sql = f"UPDATE users SET {field}=$1 WHERE telegram_id=$2"
+        return await self.execute(sql, new_value, telegram_id, execute=True)
 
     async def delete_users(self):
         await self.execute("DELETE FROM Users WHERE TRUE", execute=True)

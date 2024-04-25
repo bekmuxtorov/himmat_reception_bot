@@ -16,6 +16,8 @@ async def on_startup(dispatcher):
     await db.create_table_questions()
     await db.create_table_courses()
     await db.create_table_topics()
+    await db.create_table_applications()
+    
 
 
     # Birlamchi komandalar (/star va /help)
