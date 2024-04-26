@@ -198,13 +198,6 @@ async def add_cource(message: types.Message, state: FSMContext):
         )
         return
 
-    data = await db.select_group(group_id=for_man_group_id)
-    if data:
-        await message.answer(
-            text=f"ℹ️ {data.get('group_name')}[{data.get('group_id')}] guruhi bazaga qo'shilgan.\n\nBoshqa guruh tashkil qilib uning ID'sini yuborishingiz mumkin.",
-            reply_markup=admin_buttons
-        )
-        return
     await state.update_data(for_man_group_id=for_man_group_id)
     await message.answer(
         text="Ayollar uchun guruhning ID sini kiriting:\n\nGuruhning ID'sini @raw_data_bot yordamida olishingiz mumkin",
