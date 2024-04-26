@@ -85,8 +85,8 @@ class Database:
         sql = """
         CREATE TABLE IF NOT EXISTS applications(
             id SERIAL PRIMARY KEY,
-            user_id INT REFERENCES users(id),
-            course_id INT REFERENCES courses(id),
+            user_id INT REFERENCES users(id) NULL,
+            course_id INT REFERENCES courses(id) NULL,
             is_accepted BOOL NULL,
             is_enter_group BOOL NULL,
             applied_date timestamp with time zone NULL,
