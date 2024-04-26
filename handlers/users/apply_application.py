@@ -61,12 +61,11 @@ async def submit_app(message: types.Message, state: FSMContext):
     course_name = message.text
     courses = await db.select_all_courses()
     courses_name = {item.get("name"): item.get("id") for item in courses}
-    print(courses_name)
     if not course_name in courses_name.keys():
         await message.answer(
             text="📝 Iltimos quyidagilardan biri tanglang:",
             reply_markup=make_buttons(
-                words=courses_name.keys() + "❌ Bekor qilish"
+                words= list(courses_name.keys()) + ["❌ Bekor qilish"]
             )
         )
         return
@@ -130,7 +129,7 @@ async def submit_app(call: types.CallbackQuery, state: FSMContext):
             text = "📝 User ma'lumotlarini o'zgartirdi.\n\n"
             text += f"👤 <b>FISH</b>: {full_name}\n"
             text += f"🆔 <b>Telegram ID</b>: <code>{telegram_id}</code>\n"
-            text += f"👤 <b>Username</b>: {full_name}\n"
+            text += f"👤 <b>Username</b>: {username}\n"
             text += f"💡 <b>Jins</b>: {gender}"
             await send_message_to_admin_via_topic(
                 text=text,
@@ -153,7 +152,8 @@ async def submit_app(call: types.CallbackQuery, state: FSMContext):
         for_purpose="arrived_applications",
         text=text,
         user_id=call.from_user.id,
-        is_application=True
+        is_application=True,
+        course_id=course_id
     )
 
     await call.message.answer("✅ Arizangiz ko'rib chiqish uchun adminlar guruhiga yuborildi!\n\nTez orada qayta aloqaga chiqiladi.")
