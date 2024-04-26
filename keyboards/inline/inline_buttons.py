@@ -8,8 +8,8 @@ agree_buttons.insert(InlineKeyboardButton(
     text="Yo'q", callback_data="agree_no"))
 
 
-async def button_for_admins_application(user_id, message_id=None, chat_id=None):
-    for_accept_link = await get_start_link(f"accept:{user_id}:{chat_id}:{message_id}", encode=True)
+async def button_for_admins_application(user_id, message_id=None, chat_id=None, course_id=None):
+    for_accept_link = await get_start_link(f"accept:{user_id}:{chat_id}:{message_id}:{course_id}", encode=True)
     button_for_admins = InlineKeyboardMarkup(row_width=2)
 
     button_for_admins.insert(InlineKeyboardButton(
