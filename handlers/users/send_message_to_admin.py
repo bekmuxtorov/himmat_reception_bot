@@ -108,11 +108,29 @@ async def submit_app(call: types.CallbackQuery, state: FSMContext):
     await state.finish()
 
 
-async def send_message_to_admin_via_topic(text: str, for_purpose: str, gender: str = None, user_id: int = None, is_application: bool = None, question_id: int = None):
+async def send_message_to_admin_via_topic(text: str, for_purpose: str, gender: str = None, user_id: int = None, is_application: bool = None, question_id: int = None, course_id=None):
     groups = {
         "Erkak": FOR_MAN_ADMINS,
         "Ayol": FOR_WOMAN_ADMINS,
     }
+    if gender and (is_application or question_id):
+        chat_id = groups.get(gender)
+        topic_id = await db.get_topic_id(group_id=chat_id, for_purpose=for_purpose)
+        service_message = await bot.send_message(
+            chat_id=chat_id,
+            text=text,
+            message_thread_id=topic_id,
+            reply_markup=await button_for_admins_application(user_id=user_id, course_id=course_id) if is_application else await button_for_admins_question(question_id=question_id, chat_id=chat_id, user_id=user_id)
+        )
+        await bot.edit_message_text(
+            text=text,
+            chat_id=chat_id,
+            message_id=service_message.message_id,
+            disable_web_page_preview=True,
+            reply_markup=await button_for_admins_application(user_id=user_id, chat_id=chat_id, message_id=service_message.message_id, course_id=course_id) if is_application else await button_for_admins_question(question_id=question_id, chat_id=chat_id, message_id=service_message.message_id, user_id=user_id)
+        )
+        return
+    
     if gender:
         chat_id = groups.get(gender)
         topic_id = await db.get_topic_id(group_id=chat_id, for_purpose=for_purpose)
@@ -120,16 +138,9 @@ async def send_message_to_admin_via_topic(text: str, for_purpose: str, gender: s
             chat_id=chat_id,
             text=text,
             message_thread_id=topic_id,
-            reply_markup=await button_for_admins_application(user_id=user_id) if is_application else await button_for_admins_question(question_id=question_id, chat_id=chat_id, user_id=user_id)
-        )
-        await bot.edit_message_text(
-            text=text,
-            chat_id=chat_id,
-            message_id=service_message.message_id,
-            disable_web_page_preview=True,
-            reply_markup=await button_for_admins_application(user_id=user_id, chat_id=chat_id, message_id=service_message.message_id) if is_application else await button_for_admins_question(question_id=question_id, chat_id=chat_id, message_id=service_message.message_id, user_id=user_id)
         )
         return
+
 
     for group in groups.values():
         topic_id = await db.get_topic_id(group_id=group, for_purpose=for_purpose)
