@@ -305,21 +305,17 @@ async def accept_app(message: types.Message, payload: str, state: FSMContext = A
     user_id = payload_items[1]
     chat_id = payload_items[2]
     message_id = payload_items[3]
-    woman_user_groups = await db.select_group_by_for_whom(for_whom="woman_users")
-    man_user_groups = await db.select_group_by_for_whom(for_whom="man_users")
+    course_id = payload_items[4]
+    get_course = await db.select_course(id=int(course_id))
 
-    if not (woman_user_groups and man_user_groups):
-        await message.answer(
-            text="⚡ Iltimos foydalanuvchilar uchun barcha guruhlarni qo'shing."
-        )
-        return
+    for_man_group_id = get_course.get("for_man_group_id")
+    for_woman_group_id = get_course.get("for_woman_group_id")     
 
     user_data = await db.select_user(telegram_id=int(user_id))
     user_full_name = user_data.get("full_name")
     gender = user_data.get("gender")
+    username = user_data.get("username") 
 
-    for_man_group_id = man_user_groups.get("group_id")
-    for_woman_group_id = woman_user_groups.get("group_id")
     referral_link_man = await create_referral_link(bot, for_man_group_id)
     referral_link_woman = await create_referral_link(bot, for_woman_group_id)
     if gender == "Erkak":
@@ -334,11 +330,18 @@ async def accept_app(message: types.Message, payload: str, state: FSMContext = A
             chat_id=user_id,
             text=f"Siz guruhga qabul qilindingiz!\n\nSizning taklif havolangiz: {referral_link_woman}\n\nMuhim: Havolaning yaroqlilik muddati {DAYS} kun bo'lib, faqat {MEMBER_LIMIT} marotaba ishlatishingiz mumkin.")
     await bot.edit_message_text(
-        text=f"{user_full_name}[{user_id}] foydalanuvchi guruhga qabul qilindi va taklif havolasi yuborildi.\n\nQabul qiluvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>",
+        text=f"{user_full_name}[<a href='https://{username}.t.me'>@{username}</a>]ning guruxga kirish arizasi tasdiqlandi va guruxga kirish xavolasi unga yuborildi.\n\nQabul qiluvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>",
         chat_id=chat_id,
         message_id=message_id
     )
-    await message.answer(f"{user_full_name}[{user_id}] foydalanuvchi guruhga qabul qilindi va taklif havolasi yuborildi")
+    await send_message_to_admin_via_topic(
+        text=f"{user_full_name}[<a href='https://{username}.t.me'>@{username}</a>]ning guruxga kirish arizasi tasdiqlandi va guruxga kirish xavolasi unga yuborildi.\n\nQabul qiluvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>",
+        for_purpose = "accepted_applications",
+        gender=gender
+    )
+    await message.answer(
+            text=f"{user_full_name}[<a href='https://{username}.t.me'>@{username}</a>]ning guruxga kirish arizasi tasdiqlandi va guruxga kirish xavolasi unga yuborildi.\n\nQabul qiluvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>",
+    )
 #     text = f"Ariza topshiruvchi:<b>{user_full_name}[{user_id}] qabul qilinsinmi?</b>"
 #     await state.update_data(user_id=user_id)
 #     await message.answer(
