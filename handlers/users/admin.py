@@ -335,53 +335,7 @@ async def accept_app(message: types.Message, payload: str, state: FSMContext = A
     await message.answer(
             text=f"{user_full_name}[<a href='https://{username}.t.me'>@{username}</a>]ning guruxga kirish arizasi tasdiqlandi va guruxga kirish xavolasi unga yuborildi.\n\nQabul qiluvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>",
     )
-#     text = f"Ariza topshiruvchi:<b>{user_full_name}[{user_id}] qabul qilinsinmi?</b>"
-#     await state.update_data(user_id=user_id)
-#     await message.answer(
-#         text=text,
-#         reply_markup=agree_buttons
-#     )
-#     await AcceptApp.confirm.set()
 
-
-# @dp.callback_query_handler(text="agree_no", state=AcceptApp.confirm)
-# async def bot_echo(call: types.CallbackQuery, state: FSMContext):
-#     await call.message.delete()
-#     await call.message.answer(
-#         text="✅ Yaxshi, ariza qabul qilinmadi!",
-#     )
-#     await state.finish()
-
-
-# @dp.callback_query_handler(text="agree_yes", state=AcceptApp.confirm)
-# async def bot_echo(call: types.CallbackQuery, state: FSMContext):
-#     await call.message.delete()
-    # woman_user_groups = await db.select_group_by_for_whom(for_whom="woman_users")
-    # man_user_groups = await db.select_group_by_for_whom(for_whom="man_users")
-
-    # if not (woman_user_groups and man_user_groups):
-    #     await call.message.answer(
-    #         text="⚡ Iltimos foydalanuvchilar uchun barcha guruhlarni qo'shing."
-    #     )
-    #     return
-
-    # user_data = await state.get_data()
-    # user_id = user_data.get("user_id")
-    # print(user_id)
-    # gender = user_data.get("gender")
-
-    # for_man_group_id = man_user_groups.get("group_id")
-    # for_woman_group_id = woman_user_groups.get("group_id")
-
-    # referral_link_man = await create_referral_link(for_man_group_id)
-    # referral_link_woman = await create_referral_link(for_woman_group_id)
-    # if gender == "Erkak":
-    #     await call.message.answer(
-    #         text=f"Siz guruhga qabul qilindingiz!\n\nSizning taklif havolangiz: {referral_link_man}\n\nMuhim: Havolaning yaroqlilik muddati {DAYS} kun bo'lib, faqat {MEMBER_LIMIT} marotaba ishlatishingiz mumkin.")
-    # elif gender == "Ayol":
-    #     await call.message.answer(
-    #         text=f"Siz guruhga qabul qilindingiz!\n\nSizning taklif havolangiz: {referral_link_woman}\n\nMuhim: Havolaning yaroqlilik muddati {DAYS} kun bo'lib, faqat {MEMBER_LIMIT} marotaba ishlatishingiz mumkin.")
-    # await state.finish()
 
 CANCEL_APPLICATION = {}
 
@@ -409,6 +363,7 @@ async def cancel_app_ca(message: types.Message, state: FSMContext):
     del CANCEL_APPLICATION[f"cancel_app:{admin_user_id}"]
     user_data = await db.select_user(telegram_id=int(user_id))
     user_full_name = user_data.get("full_name")
+    gender = user_data.get("gender")
     cause_text = message.text
     await bot.send_message(
         chat_id=user_id,
@@ -416,13 +371,20 @@ async def cancel_app_ca(message: types.Message, state: FSMContext):
         reply_markup=make_buttons(
             words=[f"{const_texts.send_message_to_admin_text}", f"{const_texts.submit_application}"])
     )
+    
     await message.answer(
         text=f"{user_full_name}[{user_id}] foydalanuvchining arizasi bekor qilindi.\n\nBekor qiluvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>\n\n<b>Sabab</b>: <i>{cause_text}</i>",
     )
+    
     await bot.edit_message_text(
         text=f"{user_full_name}[{user_id}] foydalanuvchining arizasi bekor qilindi.\n\nBekor qiluvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>\n\n<b>Sabab</b>: <i>{cause_text}</i>",
         chat_id=chat_id,
         message_id=message_id,
+    )
+    await send_message_to_admin_via_topic(
+        text=f"{user_full_name}[{user_id}] foydalanuvchining arizasi bekor qilindi.\n\nBekor qiluvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>\n\n<b>Sabab</b>: <i>{cause_text}</i>",
+        for_purpose="canceled_applications",
+        gender=gender
     )
     await state.finish()
 

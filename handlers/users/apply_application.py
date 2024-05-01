@@ -133,7 +133,8 @@ async def submit_app(call: types.CallbackQuery, state: FSMContext):
             text += f"💡 <b>Jins</b>: {gender}"
             await send_message_to_admin_via_topic(
                 text=text,
-                for_purpose="added_users"
+                for_purpose="added_users",
+                gender=gender
             )
     await db.add_application(
         user_id=int(user.get("id")),
