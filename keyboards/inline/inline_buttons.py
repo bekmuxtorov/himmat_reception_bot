@@ -23,7 +23,7 @@ async def button_for_admins_application(user_id, message_id=None, chat_id=None, 
         url=for_cancel_link)
     )
 
-    for_message_link = await get_start_link(f"message_to_user:{user_id}:{chat_id}:{message_id}", encode=True)
+    for_message_link = await get_start_link(f"message_to_user:{user_id}:{chat_id}:{message_id}:{course_id}", encode=True)
     button_for_admins.insert(InlineKeyboardButton(
         text="📝 Userga xabar yuborish",
         url=for_message_link)

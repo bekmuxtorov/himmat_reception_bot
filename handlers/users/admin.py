@@ -394,12 +394,14 @@ async def message_to_user(message: types.Message, payload):
     user_id = payload_items[1]
     chat_id = payload_items[2]
     message_id = payload_items[3]
+    course_id = payload_items[4]
     admin_user_id = message.from_user.id
-    await message.answer("📝 Savolingizni quyidagi kiritishingiz mumkin:")
+    await message.answer("📝 Xabaringizni quyida kiritishingiz mumkin:")
     CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"] = {}
     CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"]["user_id"] = user_id
     CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"]["message_id"] = message_id
     CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"]["chat_id"] = chat_id
+    CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"]["course_id"] = course_id
     await MessageToUser.qestion.set()
 
 
@@ -409,9 +411,11 @@ async def cancel_app_ca(message: types.Message, state: FSMContext):
     user_id = CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"]["user_id"]
     message_id = CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"]["message_id"]
     chat_id = CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"]["chat_id"]
+    course_id = CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"]["course_id"]
     del CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"]
     user_data = await db.select_user(telegram_id=int(user_id))
     user_full_name = user_data.get("full_name")
+    gender = user_data.get("gender")
     question = message.text
     await bot.send_message(
         chat_id=user_id,
@@ -426,6 +430,14 @@ async def cancel_app_ca(message: types.Message, state: FSMContext):
         text=f"ℹ️ {user_full_name}[{user_id}] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>\n\n<b>Xabar</b>: <i>{question}</i>",
         chat_id=chat_id,
         message_id=message_id,
+    )
+    await send_message_to_admin_via_topic(
+        text=f"ℹ️ {user_full_name}[{user_id}] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>\n\n<b>Xabar</b>: <i>{question}</i>",
+        for_purpose="send_message",
+        gender=gender,
+        is_application=True,
+        user_id=user_id,
+        course_id=course_id
     )
     await state.finish()
 
@@ -471,9 +483,3 @@ async def cancel_app_ca(message: types.Message, state: FSMContext):
     await state.finish()
 
 
-# @dp.message_handler(IsPrivate(), text="create_topic")
-# async def create_topic(message: types.Message):
-#     await message.answer("Test uchun topic yaratish boshlandi.")
-#     data = await bot.create_forum_topic(chat_id=-1002117894380, name="Test uchun topic")
-#     print(data)
-#     await message.answer("Test uchun topic yaratish tugadi.")
