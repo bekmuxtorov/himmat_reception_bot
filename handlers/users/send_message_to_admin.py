@@ -56,11 +56,11 @@ async def send_to_admin(message: types.Message, state: FSMContext):
         return
     full_name = message.from_user.full_name
     await message.answer(
-        text=f"Jo'natuvchi: {full_name}\n\nYuborilayotgan savol: <i>{text}</i>",
+        text=f"Jo'natuvchi: {full_name}\n\nYuborilayotgan xabar: <i>{text}</i>",
         reply_markup=ReplyKeyboardRemove()
     )
     await message.answer(
-        text="Savol jo'natilsinmi?",
+        text="Xabar jo'natilsinmi?",
         reply_markup=agree_buttons
     )
     await state.update_data(question=text)
@@ -71,7 +71,7 @@ async def send_to_admin(message: types.Message, state: FSMContext):
 @dp.callback_query_handler(text="agree_no", state=SendMessageToAdmin.is_confirm)
 async def submit_app(call: types.CallbackQuery, state: FSMContext):
     await call.message.delete()
-    await call.message.answer(text="ℹ️ Savolni jo'natish bekor qilindi!", reply_markup=make_buttons(words=[f'{send_message_to_admin_text}', f"{submit_application}"], row_width=2))
+    await call.message.answer(text="ℹ️ Xabar jo'natish bekor qilindi!", reply_markup=make_buttons(words=[f'{send_message_to_admin_text}', f"{submit_application}"], row_width=2))
     await state.finish()
 
 
@@ -89,20 +89,22 @@ async def submit_app(call: types.CallbackQuery, state: FSMContext):
         question=question,
         created_at=await get_now(),
     )
-    await call.message.answer(question_id)
     user_data = await db.select_user(telegram_id=call.from_user.id)
     gender = user_data.get("gender")
     username = user_data.get("username")
     if username:
         username = f"<a href='https://t.me/{username}'>@{username}</a>"
-        text = f"💡 Xabar yo'llandi.\n\nJo'natuvchi: {sender_full_name}\nUsername: {username}\n\nYuborilgan xabar: <i>{question}</i>"
+        text = f"💡 Userdan xabar keldi.\n\nJo'natuvchi: {sender_full_name}\nUsername: {username}\n\nYuborilgan xabar: <i>{question}</i>"
     else:
-        text = f"Jo'natuvchi: {sender_full_name}\n\nYuborilgan savol: <i>{question}</i>"
-
-    # send_status = await send_message_to_admin(gender=gender, text=text, user_id=user_id, question_id=question_id)
-    # if not send_status:
-    #     await bot.send_message(chat_id=1603330179, text="⚡ Iltimos admin uchun guruhlarni biriktiring.")
-    #     return
+        text = f"💡 Userdan xabar keldi.\n\nJo'natuvchi: {sender_full_name}\nUserID: {user_id}\n\nYuborilgan xabar: <i>{question}</i>"
+    
+    await send_message_to_admin_via_topic(
+        text=text,
+        for_purpose="accepted_messages",
+        gender=gender,
+        question_id=question_id,
+        user_id=user_id
+        )
 
     await call.message.answer("✅ Xabaringiz muaffaqiyatli yuborildi, tez orada javob qaytariladi.")
     await state.finish()

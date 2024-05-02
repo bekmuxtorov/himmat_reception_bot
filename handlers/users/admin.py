@@ -426,11 +426,11 @@ async def cancel_app_ca(message: types.Message, state: FSMContext):
     await message.answer(
         text=f"ℹ️ {user_full_name}[{user_id}] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>\n\n<b>Xabar</b>: <i>{question}</i>",
     )
-    await bot.edit_message_text(
-        text=f"ℹ️ {user_full_name}[{user_id}] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>\n\n<b>Xabar</b>: <i>{question}</i>",
-        chat_id=chat_id,
-        message_id=message_id,
-    )
+    # await bot.edit_message_text(
+    #     text=f"ℹ️ {user_full_name}[{user_id}] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>\n\n<b>Xabar</b>: <i>{question}</i>",
+    #     chat_id=chat_id,
+    #     message_id=message_id,
+    # )
     await send_message_to_admin_via_topic(
         text=f"ℹ️ {user_full_name}[{user_id}] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>\n\n<b>Xabar</b>: <i>{question}</i>",
         for_purpose="send_message",
@@ -445,6 +445,7 @@ async def cancel_app_ca(message: types.Message, state: FSMContext):
 async def answer_to_question(message: types.Message, payload):
     await message.answer("📝 Xabaringizni quyiga kiriting:")
     payload_items = payload.split(":")
+    question_id = payload_items[1]
     user_id = payload_items[2]
     chat_id = payload_items[3]
     message_id = payload_items[4]
@@ -453,32 +454,54 @@ async def answer_to_question(message: types.Message, payload):
     CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]["user_id"] = user_id
     CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]["chat_id"] = chat_id
     CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]["message_id"] = message_id
+    CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]["question_id"] = question_id
     await AnswerToUser.answer.set()
 
-
+from keyboards.inline.inline_buttons import button_for_admins_question
 @dp.message_handler(IsPrivate(), state=AnswerToUser.answer)
 async def cancel_app_ca(message: types.Message, state: FSMContext):
     admin_user_id = message.from_user.id
     user_id = CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]["user_id"]
     chat_id = CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]["chat_id"]
     message_id = CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]["message_id"]
+    question_id = CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]["question_id"]
+
     del CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]
     user_data = await db.select_user(telegram_id=int(user_id))
     user_full_name = user_data.get("full_name")
-    question = message.text
+    username = user_data.get("username")
+    gender = user_data.get("gender")
+    answer = message.text
+    await db.update_question(
+        id=int(question_id),
+        answer=answer,
+        respondent_id=admin_user_id,
+        respondent_full_name=message.from_user.full_name
+    )
     await bot.send_message(
         chat_id=user_id,
-        text=f"📝 Sizga xabar yo'llandi! Quyidagi tugma yordamida javob qaytarishingiz mumkin.\n\nXabar: <i>{question}</i>",
+        text=f"📝 Sizga xabar yo'llandi! Quyidagi tugma yordamida javob qaytarishingiz mumkin.\n\nXabar: <i>{answer}</i>",
         reply_markup=make_buttons(
             words=[f"💡 Javob yo'llash"])
     )
     await message.answer(
-        text=f"ℹ️ {user_full_name}[{user_id}] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>\n\n<b>Xabar</b>: <i>{question}</i>",
+        text=f"ℹ️ {user_full_name}[<a href='https://t.me/{username}'>@{username}</a>] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>\n\n<b>Xabar</b>: <i>{answer}</i>",
+    )
+    await send_message_to_admin_via_topic(
+        text=f"ℹ️ {user_full_name}[<a href='https://t.me/{username}'>@{username}</a>] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>\n\n<b>Xabar</b>: <i>{answer}</i>",
+        for_purpose="send_message",
+        gender=gender
     )
     await bot.edit_message_text(
-        text=f"ℹ️ {user_full_name}[{user_id}] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>\n\n<b>Xabar</b>: <i>{question}</i>",
+        text=f"ℹ️ {user_full_name}[<a href='https://t.me/{username}'>@{username}</a>] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>\n\n<b>Xabar</b>: <i>{answer}</i>",
         chat_id=chat_id,
-        message_id=message_id
+        message_id=message_id,
+        reply_markup=await button_for_admins_question(
+            question_id=question_id,
+            user_id=user_id,
+            chat_id=chat_id,
+            message_id=message_id
+            )
     )
     await state.finish()
 

@@ -298,7 +298,7 @@ class Database:
         return data[0]
 
     async def update_question(self, id, answer, respondent_id, respondent_full_name):
-        sql = "UPDATE question SET answer=$2, respondent_id=$3, respondent_full_name=$4, WHERE telegram_id=$1"
+        sql = "UPDATE questions SET answer=$2, respondent_id=$3, respondent_full_name=$4 WHERE id=$1"
         return await self.execute(sql, id, answer, respondent_id, respondent_full_name, execute=True)
 
     async def select_question(self, **kwargs):
