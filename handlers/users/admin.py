@@ -395,7 +395,12 @@ async def message_to_user(message: types.Message, payload):
     chat_id = payload_items[2]
     message_id = payload_items[3]
     course_id = payload_items[4]
-    admin_user_id = message.from_user.id
+    admin_user_id = message.from_user.id 
+    await bot.copy_message(
+        chat_id=message.chat.id,
+        from_chat_id=chat_id,
+        message_id=message_id
+    )
     await message.answer("📝 Xabaringizni quyida kiritishingiz mumkin:")
     CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"] = {}
     CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"]["user_id"] = user_id
@@ -407,6 +412,10 @@ async def message_to_user(message: types.Message, payload):
 
 @dp.message_handler(IsPrivate(), state=MessageToUser.qestion)
 async def cancel_app_ca(message: types.Message, state: FSMContext):
+    if '/start' in message.text:
+        await message.answer(text="⚡ Oldingi xarakat bekor qilindi, davom ettirish uchun jarayonni qayta boshlang.")
+        await state.finish()
+        return 
     admin_user_id = message.from_user.id
     user_id = CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"]["user_id"]
     message_id = CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"]["message_id"]
@@ -443,13 +452,18 @@ async def cancel_app_ca(message: types.Message, state: FSMContext):
 
 
 async def answer_to_question(message: types.Message, payload):
-    await message.answer("📝 Xabaringizni quyiga kiriting:")
     payload_items = payload.split(":")
     question_id = payload_items[1]
     user_id = payload_items[2]
     chat_id = payload_items[3]
     message_id = payload_items[4]
     admin_user_id = message.from_user.id
+    await bot.copy_message(
+        chat_id=message.chat.id,
+        from_chat_id=chat_id,
+        message_id=message_id
+    )
+    await message.answer("📝 Xabaringizni quyiga kiriting:")
     CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"] = {}
     CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]["user_id"] = user_id
     CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]["chat_id"] = chat_id
@@ -460,12 +474,15 @@ async def answer_to_question(message: types.Message, payload):
 from keyboards.inline.inline_buttons import button_for_admins_question
 @dp.message_handler(IsPrivate(), state=AnswerToUser.answer)
 async def cancel_app_ca(message: types.Message, state: FSMContext):
+    if '/start' in message.text:
+        await message.answer(text="⚡ Oldingi xarakat bekor qilindi, davom ettirish uchun jarayonni qayta boshlang.")
+        await state.finish()
+        return  
     admin_user_id = message.from_user.id
     user_id = CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]["user_id"]
     chat_id = CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]["chat_id"]
     message_id = CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]["message_id"]
     question_id = CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]["question_id"]
-
     del CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]
     user_data = await db.select_user(telegram_id=int(user_id))
     user_full_name = user_data.get("full_name")
@@ -492,17 +509,17 @@ async def cancel_app_ca(message: types.Message, state: FSMContext):
         for_purpose="send_message",
         gender=gender
     )
-    await bot.edit_message_text(
-        text=f"ℹ️ {user_full_name}[<a href='https://t.me/{username}'>@{username}</a>] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>\n\n<b>Xabar</b>: <i>{answer}</i>",
-        chat_id=chat_id,
-        message_id=message_id,
-        reply_markup=await button_for_admins_question(
-            question_id=question_id,
-            user_id=user_id,
-            chat_id=chat_id,
-            message_id=message_id
-            )
-    )
+    # await bot.edit_message_text(
+    #     text=f"ℹ️ {user_full_name}[<a href='https://t.me/{username}'>@{username}</a>] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>\n\n<b>Xabar</b>: <i>{answer}</i>",
+    #     chat_id=chat_id,
+    #     message_id=message_id,
+    #     reply_markup=await button_for_admins_question(
+    #         question_id=question_id,
+    #         user_id=user_id,
+    #         chat_id=chat_id,
+    #         message_id=message_id
+    #         )
+    # )
     await state.finish()
 
 
