@@ -4,6 +4,7 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 class AddGroup(StatesGroup):
     submit_id = State()
     for_whom = State()
+    name = State()
 
 
 class AddCource(StatesGroup):

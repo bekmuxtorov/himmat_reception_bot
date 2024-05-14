@@ -58,6 +58,19 @@ async def add_group(message: types.Message, state: FSMContext):
         return
 
     await state.update_data(group_id=group_id)
+    await message.answer(text="📃 Guruh nomini kiriting:")
+    await AddGroup.name.set()
+
+@dp.message_handler(IsPrivate(), state=AddGroup.name)
+async def add_group(message: types.Message, state: FSMContext):
+    group_name = message.text
+    if '/start' in group_name:
+        await message.answer(
+            text="Iltimos guruh nomini kiriting!",
+            reply_markup=make_buttons(words=["Bekor qilish"])
+        )
+    
+    await state.update_data(group_name=group_name)
     await message.answer(
         text="Guruh kimlar uchun:\n\nQuyidan tanlang.",
         reply_markup=make_buttons(
@@ -89,11 +102,12 @@ async def add_group(message: types.Message, state: FSMContext):
 
     group_data = await state.get_data()
     group_id = group_data.get("group_id")
+    group_name = group_data.get("group_name")
     await db.add_group(
         by_user_id=message.from_user.id,
         by_user_name=message.from_user.full_name,
         group_id=group_id,
-        group_name=None,
+        group_name=group_name,
         created_at=await get_now(),
         for_whom=for_whom
     )
