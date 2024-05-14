@@ -36,23 +36,23 @@ async def bot_start(message: types.Message):
         return
 
     user_id = message.from_user.id
-    # groups = await db.select_all_groups()
-    # if groups:
-    #     for item in groups:
-    #         group = item.get("group_id")
-    #         if await is_member(bot=bot, group=group, user_id=user_id):
-    #             await message.answer(f"Assalomu alekum, {message.from_user.full_name}\n\nOldingi guruhlarda qatnashganligiz uchun loyihada qayta qatnasha olmaysiz!\n\n{'-'*10}\n#TODO\nShu yerga mos matn yozish kerak")
-    #             return
+    groups = await db.select_all_groups()
+    if groups:
+        for item in groups:
+            group = item.get("group_id")
+            if await is_member(bot=bot, group=group, user_id=user_id):
+                await message.answer(f"Assalomu alekum, {message.from_user.full_name}\n\nMa'zur tutasiz siz allaqachon Himmat 700+ hos guruhlarida bor ekansiz. Xos guruhlarda bo'lib turib yana yangi xos guruhga kira olmaysiz.")
+                return
 
-    # try:
-    #     await db.add_user(
-    #         full_name=message.from_user.full_name,
-    #         username=message.from_user.username,
-    #         telegram_id=message.from_user.id,
-    #         created_at=await get_now(),
-    #     )
-    # except:
-    #     pass
+    try:
+        await db.add_user(
+            full_name=message.from_user.full_name,
+            username=message.from_user.username,
+            telegram_id=message.from_user.id,
+            created_at=await get_now(),
+        )
+    except:
+        pass
 
     await message.answer(
         text=f"Assalomu aleykum, {message.from_user.full_name}!\n\nHimmat 700+ loyihasiga qatnashish uchun ariza qabul qiluvchi botga xush kelibsiz!\n\nAriza yuborish uchun quyidagi tugmani bosing.",
