@@ -338,7 +338,6 @@ async def accept_app(message: types.Message, payload: str, state: FSMContext = A
             text=f"Siz guruhga qabul qilindingiz!\n\nSizning taklif havolangiz: {referral_link_woman}\n\nMuhim: Havolaning yaroqlilik muddati {DAYS} kun bo'lib, faqat {MEMBER_LIMIT} marotaba ishlatishingiz mumkin.")
     await bot.edit_message_text(
         text=f"{user_full_name}[<a href='https://{username}.t.me'>@{username}</a>]ning guruxga kirish arizasi tasdiqlandi va guruxga kirish xavolasi unga yuborildi.\n\nQabul qiluvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>",
-        text=f"{user_full_name}[<a href='https://{username}.t.me'>@{username}</a>]ning guruxga kirish arizasi tasdiqlandi va guruxga kirish xavolasi unga yuborildi.\n\nQabul qiluvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>",
         chat_id=chat_id,
         message_id=message_id
     )
