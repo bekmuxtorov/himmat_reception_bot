@@ -14,10 +14,10 @@ def make_buttons(words: list, row_width: int = 1) -> ReplyKeyboardMarkup:
 admin_buttons = make_buttons(
     words=[
         add_group,
-        add_course,
-        find_user,
+        # add_course,
+        # find_user,
         list_group,
-        list_course
+        # list_course
     ],
     row_width=2
 )
