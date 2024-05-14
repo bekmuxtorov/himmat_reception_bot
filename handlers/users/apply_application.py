@@ -67,31 +67,31 @@ async def submit_app(message: types.Message, state: FSMContext):
     gender = message.text
     await state.update_data(gender=gender)
     await db.update_user_gender(telegram_id=message.from_user.id, gender=gender)
-    courses = await db.select_all_courses()
-    courses_name = [item.get("name")
-                    for item in courses] + ["❌ Bekor qilish"]
-    await message.answer(text="📃 Kurslardan birini tanglang:", reply_markup=make_buttons(words=courses_name))
-    await SubmitApplication.which_cource.set()
-
-
-@dp.message_handler(IsPrivate(), state=SubmitApplication.which_cource)
-async def submit_app(message: types.Message, state: FSMContext):
-    course_name = message.text
-    courses = await db.select_all_courses()
-    courses_name = {item.get("name"): item.get("id") for item in courses}
-    if not course_name in courses_name.keys():
-        await message.answer(
-            text="📝 Iltimos quyidagilardan biri tanglang:",
-            reply_markup=make_buttons(
-                words= list(courses_name.keys()) + ["❌ Bekor qilish"]
-            )
-        )
-        return
-    course_id = courses_name.get(course_name)
+    # courses = await db.select_all_courses()
+    # courses_name = [item.get("name")
+    #                 for item in courses] + ["❌ Bekor qilish"]
+    # await message.answer(text="📃 Kurslardan birini tanglang:", reply_markup=make_buttons(words=courses_name))
+    course_id = 12
     await state.update_data(course_id=course_id)
-    await state.update_data(course_name=course_name)
+    await state.update_data(course_name="Xos guruh")
     await message.answer("📝 Ism va familiyangizni kiriting:", reply_markup=ReplyKeyboardRemove())
     await SubmitApplication.full_name.set()
+
+
+# @dp.message_handler(IsPrivate(), state=SubmitApplication.which_cource)
+# async def submit_app(message: types.Message, state: FSMContext):
+    # course_name = message.text
+    # courses = await db.select_all_courses()
+    # courses_name = {item.get("name"): item.get("id") for item in courses}
+    # if not course_name in courses_name.keys():
+    #     await message.answer(
+    #         text="📝 Iltimos quyidagilardan biri tanglang:",
+    #         reply_markup=make_buttons(
+    #             words= list(courses_name.keys()) + ["❌ Bekor qilish"]
+    #         )
+    #     )
+    #     return
+
 
 
 @dp.message_handler(IsPrivate(), state=SubmitApplication.gender)

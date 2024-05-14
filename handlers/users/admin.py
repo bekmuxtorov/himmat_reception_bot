@@ -337,17 +337,17 @@ async def accept_app(message: types.Message, payload: str, state: FSMContext = A
             chat_id=user_id,
             text=f"Siz guruhga qabul qilindingiz!\n\nSizning taklif havolangiz: {referral_link_woman}\n\nMuhim: Havolaning yaroqlilik muddati {DAYS} kun bo'lib, faqat {MEMBER_LIMIT} marotaba ishlatishingiz mumkin.")
     await bot.edit_message_text(
-        text=f"{user_full_name}[<a href='https://{username}.t.me'>@{username}</a>]ning guruxga kirish arizasi tasdiqlandi va guruxga kirish xavolasi unga yuborildi.\n\nQabul qiluvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>",
+        text=f"{user_full_name}[<a href='https://{username}.t.me'>@{username}</a>]ning guruxga kirish arizasi tasdiqlandi va guruxga kirish xavolasi unga yuborildi.\n\nQabul qiluvchi: <b>{message.from_user.full_name}[{message.from_user.username}]</b>",
         chat_id=chat_id,
         message_id=message_id
     )
     await send_message_to_admin_via_topic(
-        text=f"{user_full_name}[<a href='https://{username}.t.me'>@{username}</a>]ning guruxga kirish arizasi tasdiqlandi va guruxga kirish xavolasi unga yuborildi.\n\nQabul qiluvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>",
+        text=f"{user_full_name}[<a href='https://{username}.t.me'>@{username}</a>]ning guruxga kirish arizasi tasdiqlandi va guruxga kirish xavolasi unga yuborildi.\n\nQabul qiluvchi: <b>{message.from_user.full_name}[{message.from_user.username}]</b>",
         for_purpose = "accepted_applications",
         gender=gender
     )
     await message.answer(
-            text=f"{user_full_name}[<a href='https://{username}.t.me'>@{username}</a>]ning guruxga kirish arizasi tasdiqlandi va guruxga kirish xavolasi unga yuborildi.\n\nQabul qiluvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>",
+            text=f"{user_full_name}[<a href='https://{username}.t.me'>@{username}</a>]ning guruxga kirish arizasi tasdiqlandi va guruxga kirish xavolasi unga yuborildi.\n\nQabul qiluvchi: <b>{message.from_user.full_name}[{message.from_user.username}]</b>",
     )
 
 
@@ -378,6 +378,7 @@ async def cancel_app_ca(message: types.Message, state: FSMContext):
     user_data = await db.select_user(telegram_id=int(user_id))
     user_full_name = user_data.get("full_name")
     gender = user_data.get("gender")
+    username = user_data.get("username")
     cause_text = message.text
     await bot.send_message(
         chat_id=user_id,
@@ -387,16 +388,16 @@ async def cancel_app_ca(message: types.Message, state: FSMContext):
     )
     
     await message.answer(
-        text=f"{user_full_name}[{user_id}] foydalanuvchining arizasi bekor qilindi.\n\nBekor qiluvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>\n\n<b>Sabab</b>: <i>{cause_text}</i>",
+        text=f"{user_full_name}[{username}] foydalanuvchining arizasi bekor qilindi.\n\nBekor qiluvchi: <b>{message.from_user.full_name}[{message.from_user.username}]</b>\n\n<b>Sabab</b>: <i>{cause_text}</i>",
     )
     
     await bot.edit_message_text(
-        text=f"{user_full_name}[{user_id}] foydalanuvchining arizasi bekor qilindi.\n\nBekor qiluvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>\n\n<b>Sabab</b>: <i>{cause_text}</i>",
+        text=f"{user_full_name}[{username}] foydalanuvchining arizasi bekor qilindi.\n\nBekor qiluvchi: <b>{message.from_user.full_name}[{message.from_user.username}]</b>\n\n<b>Sabab</b>: <i>{cause_text}</i>",
         chat_id=chat_id,
         message_id=message_id,
     )
     await send_message_to_admin_via_topic(
-        text=f"{user_full_name}[{user_id}] foydalanuvchining arizasi bekor qilindi.\n\nBekor qiluvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>\n\n<b>Sabab</b>: <i>{cause_text}</i>",
+        text=f"{user_full_name}[{username}] foydalanuvchining arizasi bekor qilindi.\n\nBekor qiluvchi: <b>{message.from_user.full_name}[{message.from_user.username}]</b>\n\n<b>Sabab</b>: <i>{cause_text}</i>",
         for_purpose="canceled_applications",
         gender=gender
     )
@@ -439,6 +440,7 @@ async def cancel_app_ca(message: types.Message, state: FSMContext):
     user_data = await db.select_user(telegram_id=int(user_id))
     user_full_name = user_data.get("full_name")
     gender = user_data.get("gender")
+    username = user_data.get("username")
     question = message.text
     await bot.send_message(
         chat_id=user_id,
@@ -447,7 +449,7 @@ async def cancel_app_ca(message: types.Message, state: FSMContext):
             words=[f"💡 Javob yo'llash"])
     )
     await message.answer(
-        text=f"ℹ️ {user_full_name}[{user_id}] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>\n\n<b>Xabar</b>: <i>{question}</i>",
+        text=f"ℹ️ {user_full_name}[{username}] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[{message.from_user.username}]</b>\n\n<b>Xabar</b>: <i>{question}</i>",
     )
     # await bot.edit_message_text(
     #     text=f"ℹ️ {user_full_name}[{user_id}] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>\n\n<b>Xabar</b>: <i>{question}</i>",
@@ -455,7 +457,7 @@ async def cancel_app_ca(message: types.Message, state: FSMContext):
     #     message_id=message_id,
     # )
     await send_message_to_admin_via_topic(
-        text=f"ℹ️ {user_full_name}[{user_id}] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>\n\n<b>Xabar</b>: <i>{question}</i>",
+        text=f"ℹ️ {user_full_name}[{username}] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[{message.from_user.username}]</b>\n\n<b>Xabar</b>: <i>{question}</i>",
         for_purpose="send_message",
         gender=gender,
         is_application=True,
@@ -516,10 +518,10 @@ async def cancel_app_ca(message: types.Message, state: FSMContext):
             words=[f"💡 Javob yo'llash"])
     )
     await message.answer(
-        text=f"ℹ️ {user_full_name}[<a href='https://t.me/{username}'>@{username}</a>] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>\n\n<b>Xabar</b>: <i>{answer}</i>",
+        text=f"ℹ️ {user_full_name}[<a href='https://t.me/{username}'>@{username}</a>] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[{message.from_user.username}]</b>\n\n<b>Xabar</b>: <i>{answer}</i>",
     )
     await send_message_to_admin_via_topic(
-        text=f"ℹ️ {user_full_name}[<a href='https://t.me/{username}'>@{username}</a>] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>\n\n<b>Xabar</b>: <i>{answer}</i>",
+        text=f"ℹ️ {user_full_name}[<a href='https://t.me/{username}'>@{username}</a>] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[{message.from_user.username}]</b>\n\n<b>Xabar</b>: <i>{answer}</i>",
         for_purpose="send_message",
         gender=gender
     )

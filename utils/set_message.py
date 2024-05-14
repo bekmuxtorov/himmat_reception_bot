@@ -9,6 +9,6 @@ async def set_message(user_data: dict, to_admin: bool) -> str:
         text += "💡 Yuborilayotgan ma'lumotlar.\n\n"
 
     text += f"<b>Jins</b>: {gender}\n"
-    text += f"<b>Kurs nomi</b>: {curse_name}\n"
+    # text += f"<b>Kurs nomi</b>: {curse_name}\n"
     text += f"<b>Ism va familiya:</b> {full_name}"
     return text
