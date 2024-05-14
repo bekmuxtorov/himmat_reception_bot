@@ -5,7 +5,7 @@ from aiogram.dispatcher import FSMContext
 from loader import dp, bot, db
 from filters import IsPrivate
 from utils import get_now
-from utils.const_texts import submit_application, terms, send_message_to_admin_text
+from utils.const_texts import submit_application, send_message_to_admin_text
 from utils.set_message import set_message
 from keyboards.inline.inline_buttons import agree_buttons, button_for_admins_application, button_for_admins_question
 from keyboards.default.default_buttons import make_buttons
@@ -21,7 +21,25 @@ async def bot_start(message: types.Message, state: FSMContext):
 
 @dp.message_handler(IsPrivate(), text=submit_application)
 async def bot_echo(message: types.Message):
-    await message.answer(terms, reply_markup=ReplyKeyboardRemove())
+
+
+    await bot.copy_message(
+        chat_id= message.chat.id,
+        from_chat_id=-1001864130751,
+        message_id=2915
+    )
+    await bot.copy_message(
+        chat_id= message.chat.id,
+        from_chat_id=-1001864130751,
+        message_id=2916
+    )   
+    service_message = await message.answer('.', reply_markup=ReplyKeyboardRemove())
+    await service_message.delete() 
+    await bot.copy_message(
+        chat_id= message.chat.id,
+        from_chat_id=-1001864130751,
+        message_id=2917
+    )
     await message.answer(text="💡 Yuqoridagi shartlarga rozimisiz?", reply_markup=agree_buttons)
     await SubmitApplication.be_agree.set()
 
