@@ -11,7 +11,9 @@ class AddCource(StatesGroup):
     name = State()
     description = State()
     for_man_group_id = State()
+    for_man_group_name = State()
     for_woman_group_id = State()
+    for_woman_group_name = State()
 
 
 class AcceptApp(StatesGroup):

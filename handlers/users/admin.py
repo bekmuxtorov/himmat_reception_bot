@@ -214,6 +214,18 @@ async def add_cource(message: types.Message, state: FSMContext):
 
     await state.update_data(for_man_group_id=for_man_group_id)
     await message.answer(
+        text="Erkaklar uchun guruhning nomini kiriting:",
+        reply_markup=make_buttons(
+            words=["Bekor qilish"]
+        )
+    )
+    await AddCource.for_man_group_name.set()
+
+@dp.message_handler(IsPrivate(), state=AddCource.for_man_group_name)
+async def add_cource(message: types.Message, state: FSMContext):
+    for_man_group_name = message.text
+    await state.update_data(for_man_group_name=for_man_group_name)
+    await message.answer(
         text="Ayollar uchun guruhning ID sini kiriting:\n\nGuruhning ID'sini @raw_data_bot yordamida olishingiz mumkin",
         reply_markup=make_buttons(
             words=["Bekor qilish"]
@@ -242,26 +254,43 @@ async def add_cource(message: types.Message, state: FSMContext):
             reply_markup=admin_buttons
         )
         return
+    await state.update_data(for_woman_group_id=for_woman_group_id)
+    await message.answer(
+        text="Ayollar uchun guruhning nomini kiriting:",
+        reply_markup=make_buttons(
+            words=["Bekor qilish"]
+        )
+    )
+    await AddCource.for_woman_group_name.set()
+
+
+@dp.message_handler(IsPrivate(), state=AddCource.for_woman_group_name)
+async def add_cource(message: types.Message, state: FSMContext):
+    for_woman_group_name = message.text
 
     cource_data = await state.get_data()
     name = cource_data.get("name")
     description = cource_data.get("description")
 
     for_man_group_id = cource_data.get("for_man_group_id")
+    for_man_group_name = cource_data.get("for_man_group_name")
+    for_woman_group_id = cource_data.get("for_woman_group_id")
     created_at = await get_now()
 
     await db.add_course(
         name=name,
         description=description,
         for_man_group_id=str(for_man_group_id),
+        for_man_group_name = for_man_group_name,
         for_woman_group_id=str(for_woman_group_id),
+        for_woman_group_name = for_woman_group_name,
         created_at=created_at
     )
     await db.add_group(
         by_user_id=message.from_user.id,
         by_user_name=message.from_user.full_name,
         group_id=for_man_group_id,
-        group_name=None,
+        group_name=for_man_group_name,
         created_at=created_at,
         for_whom="man_users"
     )
@@ -270,7 +299,7 @@ async def add_cource(message: types.Message, state: FSMContext):
         by_user_id=message.from_user.id,
         by_user_name=message.from_user.full_name,
         group_id=for_woman_group_id,
-        group_name=None,
+        group_name=for_woman_group_name,
         created_at=created_at,
         for_whom="woman_users"
     )
@@ -280,8 +309,10 @@ async def add_cource(message: types.Message, state: FSMContext):
     text += f"<b>Tavsif:</b> {description}\n"
     text += f"<b>Yaratgan admin:</b> {message.from_user.full_name}\n"
     text += f"<b>Yaratilgan:</b> {created_at}\n"
-    text += f"<b>Erkaklar uchun guruh ID:</b> <code>{for_man_group_id}</code>\n"
+    text += f"<b>Erkaklar uchun guruhning ID:</b> <code>{for_man_group_id}</code>\n"
+    text += f"<b>Erkaklar uchun guruhning nomi:</b> <code>{for_man_group_name}</code>\n"
     text += f"<b>Ayollar uchun guruh ID:</b> <code>{for_woman_group_id}</code>\n"
+    text += f"<b>Ayollar uchun guruhning nomi:</b> <code>{for_woman_group_name}</code>\n"
     await message.answer(
         text=text,
         reply_markup=admin_buttons

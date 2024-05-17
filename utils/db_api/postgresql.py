@@ -102,7 +102,9 @@ class Database:
             name VARCHAR(255),
             description VARCHAR(255),
             for_man_group_id varchar(255),
-            for_woman_group_id varchar(255), 
+            for_man_group_name varchar(255) NULL,
+            for_woman_group_id varchar(255),
+            for_woman_group_name varchar(255) NULL, 
             created_at timestamp with time zone NOT NULL DEFAULT NOW()
         );
         """
@@ -228,12 +230,12 @@ class Database:
         } if data else None
 
     # For courses
-    async def add_course(self, name, description, for_man_group_id, for_woman_group_id, created_at):
+    async def add_course(self, name, description, for_man_group_id, for_man_group_name, for_woman_group_id, for_woman_group_name, created_at):
         sql = """
-        INSERT INTO courses (name, description, for_man_group_id, for_woman_group_id, created_at)
-        VALUES ($1, $2, $3, $4, $5) returning *;
+        INSERT INTO courses (name, description, for_man_group_id, for_man_group_name, for_woman_group_id, for_woman_group_name, created_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7) returning *;
         """
-        return await self.execute(sql, name, description, for_man_group_id, for_woman_group_id, created_at, fetchrow=True)
+        return await self.execute(sql, name, description, for_man_group_id, for_man_group_name, for_woman_group_id, for_woman_group_name, created_at, fetchrow=True)
 
     async def select_all_courses(self):
         sql = """
