@@ -25,24 +25,21 @@ async def bot_echo(message: types.Message):
 
     await bot.copy_message(
         chat_id= message.chat.id,
-        from_chat_id=-1001938636106,
-        message_thread_id=1,
-        message_id=195
+        from_chat_id=-1001864130751,
+        message_id=2915
     )
     # https://t.me/c/1938636106/1/195
     await bot.copy_message(
         chat_id= message.chat.id,
-        from_chat_id=-1001938636106,
-        message_thread_id=1,
-        message_id=196
+        from_chat_id=-1001864130751,
+        message_id=2916
     )   
     service_message = await message.answer('.', reply_markup=ReplyKeyboardRemove())
     await service_message.delete() 
     await bot.copy_message(
         chat_id= message.chat.id,
-        from_chat_id=-1001938636106,
-        message_thread_id=1,
-        message_id=197
+        from_chat_id=-1001864130751,
+        message_id=2917
     )
     await message.answer(text="💡 Yuqoridagi shartlarga rozimisiz?", reply_markup=agree_buttons)
     await SubmitApplication.be_agree.set()
