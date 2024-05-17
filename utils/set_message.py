@@ -14,5 +14,5 @@ async def set_message(user_data: dict, to_admin: bool) -> str:
     # text += f"<b>Kurs nomi</b>: {curse_name}\n"
     text += f"<b>Ism va familiya:</b> {full_name}\n"
     text += f"<b>Telegram nomi:</b> {telegram_name}\n"
-    text += f"<b>Username</b> {username}"
+    text += f"<b>Username</b>: <a href='https://t.me/{username}'>@{username}</a>"
     return text
