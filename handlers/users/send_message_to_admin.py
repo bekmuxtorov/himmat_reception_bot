@@ -128,7 +128,6 @@ async def send_message_to_admin_via_topic(text: str, for_purpose: str, gender: s
             text=text,
             chat_id=chat_id,
             message_id=service_message.message_id,
-            disable_web_page_preview=True,
             reply_markup=await button_for_admins_application(user_id=user_id, chat_id=chat_id, message_id=service_message.message_id, course_id=course_id) if is_application else await button_for_admins_question(question_id=question_id, chat_id=chat_id, message_id=service_message.message_id, user_id=user_id)
         )
         return

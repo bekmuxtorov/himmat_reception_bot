@@ -371,17 +371,14 @@ async def accept_app(message: types.Message, payload: str, state: FSMContext = A
         text=f"{user_full_name}[<a href='https://{username}.t.me'>@{username}</a>]ning guruxga kirish arizasi tasdiqlandi va guruxga kirish xavolasi unga yuborildi.\n\nQabul qiluvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>",
         chat_id=chat_id,
         message_id=message_id,
-        disable_web_page_preview=True
     )
     await send_message_to_admin_via_topic(
         text=f"{user_full_name}[<a href='https://{username}.t.me'>@{username}</a>]ning guruxga kirish arizasi tasdiqlandi va guruxga kirish xavolasi unga yuborildi.\n\nQabul qiluvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>",
         for_purpose = "accepted_applications",
         gender=gender,
-        disable_web_page_preview=True
     )
     await message.answer(
             text=f"{user_full_name}[<a href='https://{username}.t.me'>@{username}</a>]ning guruxga kirish arizasi tasdiqlandi va guruxga kirish xavolasi unga yuborildi.\n\nQabul qiluvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>",
-            disable_web_page_preview=True
     )
 
 
@@ -423,18 +420,15 @@ async def cancel_app_ca(message: types.Message, state: FSMContext):
     
     await message.answer(
         text=f"[<a href='https://{username}.t.me'>@{username}</a>] foydalanuvchining arizasi bekor qilindi.\n\nBekor qiluvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>\n\n<b>Sabab</b>: <i>{cause_text}</i>",
-        disable_web_page_preview=True,
     )
     
     await bot.edit_message_text(
         text=f"[<a href='https://{username}.t.me'>@{username}</a>] foydalanuvchining arizasi bekor qilindi.\n\nBekor qiluvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>\n\n<b>Sabab</b>: <i>{cause_text}</i>",
-        disable_web_page_preview=True,
         chat_id=chat_id,
         message_id=message_id,
     )
     await send_message_to_admin_via_topic(
         text=f"[<a href='https://{username}.t.me'>@{username}</a>] foydalanuvchining arizasi bekor qilindi.\n\nBekor qiluvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>\n\n<b>Sabab</b>: <i>{cause_text}</i>",
-        disable_web_page_preview=True,
         for_purpose="canceled_applications",
         gender=gender
     )
