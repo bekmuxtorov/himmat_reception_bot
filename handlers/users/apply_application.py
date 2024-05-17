@@ -110,6 +110,8 @@ async def submit_app(message: types.Message, state: FSMContext):
 
     await state.update_data(full_name=full_name)
     user_data = await state.get_data()
+    user_data["telegram_name"] = message.from_user.full_name
+    user_data["username"] = message.from_user.username
     new_message_for_user = await set_message(user_data, to_admin=False)
     await message.answer(new_message_for_user)
     await message.answer("⚡ Ariza yuborilsinmi?", reply_markup=agree_buttons)
@@ -127,9 +129,15 @@ async def submit_app(call: types.CallbackQuery, state: FSMContext):
 async def submit_app(call: types.CallbackQuery, state: FSMContext):
     await call.message.delete()
     application_data = await state.get_data()
-    telegram_id = call.message.from_user.id
+    telegram_id = call.from_user.id
     full_name = application_data.get("full_name")
-    username = call.message.from_user.username
+    username = call.from_user.username
+
+    print("-"*30)
+    print(f"message.from_user: {call.message.from_user.username}")
+    print(f"from_user: {call.from_user.username}")
+    print("-"*30)
+
     gender = application_data.get("gender")
     course_id = application_data.get("course_id")
     course_name = application_data.get("course_name")
@@ -160,10 +168,12 @@ async def submit_app(call: types.CallbackQuery, state: FSMContext):
         course_id=int(course_id),
         created_at=await get_now()
     )
-
+    telegram_name = call.from_user.full_name
     user_data = {
         "gender": gender,
         "full_name": full_name,
+        "telegram_name": telegram_name,
+        "username": username,
         "course_name": course_name
     }
     text = await set_message(user_data=user_data, to_admin=True)
