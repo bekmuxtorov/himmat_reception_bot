@@ -41,7 +41,7 @@ async def bot_start(message: types.Message):
         for item in groups:
             group = item.get("group_id")
             if await is_member(bot=bot, group=group, user_id=user_id):
-                await message.answer(f"Assalomu alaykum, {message.from_user.full_name}\n\nMa'zur tutasiz siz allaqachon Himmat 700+ hos guruhlarida bor ekansiz. Xos guruhlarda bo'lib turib yana yangi xos guruhga kira olmaysiz.")
+                await message.answer(f"Assalomu alaykum, {message.from_user.full_name}\n\nMa'zur tutasiz siz allaqachon Himmat 700+ xos guruhlarida bor ekansiz. Xos guruhlarda bo'lib turib yana yangi xos guruhga kira olmaysiz.")
                 return
 
     try:
