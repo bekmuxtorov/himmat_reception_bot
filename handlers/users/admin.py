@@ -1,3 +1,4 @@
+from keyboards.inline.inline_buttons import button_for_admins_question
 import asyncio
 import pytz
 
@@ -61,6 +62,7 @@ async def add_group(message: types.Message, state: FSMContext):
     await message.answer(text="📃 Guruh nomini kiriting:")
     await AddGroup.name.set()
 
+
 @dp.message_handler(IsPrivate(), state=AddGroup.name)
 async def add_group(message: types.Message, state: FSMContext):
     group_name = message.text
@@ -69,7 +71,7 @@ async def add_group(message: types.Message, state: FSMContext):
             text="Iltimos guruh nomini kiriting!",
             reply_markup=make_buttons(words=["Bekor qilish"])
         )
-    
+
     await state.update_data(group_name=group_name)
     await message.answer(
         text="Guruh kimlar uchun:\n\nQuyidan tanlang.",
@@ -221,6 +223,7 @@ async def add_cource(message: types.Message, state: FSMContext):
     )
     await AddCource.for_man_group_name.set()
 
+
 @dp.message_handler(IsPrivate(), state=AddCource.for_man_group_name)
 async def add_cource(message: types.Message, state: FSMContext):
     for_man_group_name = message.text
@@ -281,9 +284,9 @@ async def add_cource(message: types.Message, state: FSMContext):
         name=name,
         description=description,
         for_man_group_id=str(for_man_group_id),
-        for_man_group_name = for_man_group_name,
+        for_man_group_name=for_man_group_name,
         for_woman_group_id=str(for_woman_group_id),
-        for_woman_group_name = for_woman_group_name,
+        for_woman_group_name=for_woman_group_name,
         created_at=created_at
     )
     await db.add_group(
@@ -347,12 +350,12 @@ async def accept_app(message: types.Message, payload: str, state: FSMContext = A
     get_course = await db.select_course(id=int(course_id))
 
     for_man_group_id = get_course.get("for_man_group_id")
-    for_woman_group_id = get_course.get("for_woman_group_id")     
+    for_woman_group_id = get_course.get("for_woman_group_id")
 
     user_data = await db.select_user(telegram_id=int(user_id))
     user_full_name = user_data.get("full_name")
     gender = user_data.get("gender")
-    username = user_data.get("username") 
+    username = user_data.get("username")
 
     referral_link_man = await create_referral_link(bot, for_man_group_id)
     referral_link_woman = await create_referral_link(bot, for_woman_group_id)
@@ -374,11 +377,11 @@ async def accept_app(message: types.Message, payload: str, state: FSMContext = A
     )
     await send_message_to_admin_via_topic(
         text=f"{user_full_name}[<a href='https://{username}.t.me'>@{username}</a>]ning guruxga kirish arizasi tasdiqlandi va guruxga kirish xavolasi unga yuborildi.\n\nQabul qiluvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>",
-        for_purpose = "accepted_applications",
+        for_purpose="accepted_applications",
         gender=gender,
     )
     await message.answer(
-            text=f"{user_full_name}[<a href='https://{username}.t.me'>@{username}</a>]ning guruxga kirish arizasi tasdiqlandi va guruxga kirish xavolasi unga yuborildi.\n\nQabul qiluvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>",
+        text=f"{user_full_name}[<a href='https://{username}.t.me'>@{username}</a>]ning guruxga kirish arizasi tasdiqlandi va guruxga kirish xavolasi unga yuborildi.\n\nQabul qiluvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>",
     )
 
 
@@ -417,11 +420,11 @@ async def cancel_app_ca(message: types.Message, state: FSMContext):
         reply_markup=make_buttons(
             words=[f"{const_texts.send_message_to_admin_text}", f"{const_texts.submit_application}"])
     )
-    
+
     await message.answer(
         text=f"[<a href='https://{username}.t.me'>@{username}</a>] foydalanuvchining arizasi bekor qilindi.\n\nBekor qiluvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>\n\n<b>Sabab</b>: <i>{cause_text}</i>",
     )
-    
+
     await bot.edit_message_text(
         text=f"[<a href='https://{username}.t.me'>@{username}</a>] foydalanuvchining arizasi bekor qilindi.\n\nBekor qiluvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>\n\n<b>Sabab</b>: <i>{cause_text}</i>",
         chat_id=chat_id,
@@ -441,7 +444,7 @@ async def message_to_user(message: types.Message, payload):
     chat_id = payload_items[2]
     message_id = payload_items[3]
     course_id = payload_items[4]
-    admin_user_id = message.from_user.id 
+    admin_user_id = message.from_user.id
     await bot.copy_message(
         chat_id=message.chat.id,
         from_chat_id=chat_id,
@@ -461,7 +464,7 @@ async def cancel_app_ca(message: types.Message, state: FSMContext):
     if '/start' in message.text:
         await message.answer(text="⚡ Oldingi xarakat bekor qilindi, davom ettirish uchun jarayonni qayta boshlang.")
         await state.finish()
-        return 
+        return
     admin_user_id = message.from_user.id
     user_id = CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"]["user_id"]
     message_id = CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"]["message_id"]
@@ -480,7 +483,7 @@ async def cancel_app_ca(message: types.Message, state: FSMContext):
             words=[f"💡 Javob yo'llash"])
     )
     await message.answer(
-        text=f"ℹ️ {user_full_name}[{username}] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>\n\n<b>Xabar</b>: <i>{question}</i>",
+        text=f"ℹ️ {user_full_name}[<a href='https://t.me/{username}'>@{username}</a>] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>\n\n<b>Xabar</b>: <i>{question}</i>",
     )
     # await bot.edit_message_text(
     #     text=f"ℹ️ {user_full_name}[{user_id}] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>\n\n<b>Xabar</b>: <i>{question}</i>",
@@ -488,10 +491,10 @@ async def cancel_app_ca(message: types.Message, state: FSMContext):
     #     message_id=message_id,
     # )
     await send_message_to_admin_via_topic(
-        text=f"ℹ️ {user_full_name}[{username}] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>\n\n<b>Xabar</b>: <i>{question}</i>",
+        text=f"ℹ️ {user_full_name}[<a href='https://t.me/{username}'>@{username}</a>] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>\n\n<b>Xabar</b>: <i>{question}</i>",
         for_purpose="send_message",
         gender=gender,
-        is_application=True,
+        is_application=False,
         user_id=user_id,
         course_id=course_id
     )
@@ -518,13 +521,13 @@ async def answer_to_question(message: types.Message, payload):
     CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]["question_id"] = question_id
     await AnswerToUser.answer.set()
 
-from keyboards.inline.inline_buttons import button_for_admins_question
+
 @dp.message_handler(IsPrivate(), state=AnswerToUser.answer)
 async def cancel_app_ca(message: types.Message, state: FSMContext):
     if '/start' in message.text:
         await message.answer(text="⚡ Oldingi xarakat bekor qilindi, davom ettirish uchun jarayonni qayta boshlang.")
         await state.finish()
-        return  
+        return
     admin_user_id = message.from_user.id
     user_id = CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]["user_id"]
     chat_id = CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]["chat_id"]
@@ -568,5 +571,3 @@ async def cancel_app_ca(message: types.Message, state: FSMContext):
     #         )
     # )
     await state.finish()
-
-
