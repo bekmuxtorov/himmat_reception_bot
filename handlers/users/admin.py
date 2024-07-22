@@ -359,32 +359,39 @@ async def accept_app(message: types.Message, payload: str, state: FSMContext = A
 
     referral_link_man = await create_referral_link(bot, for_man_group_id)
     referral_link_woman = await create_referral_link(bot, for_woman_group_id)
-    if gender == "Erkak":
-        await bot.send_message(
-            chat_id=user_id,
-            text=f"Xurmatli <b>{user_full_name}</b>\nSiz guruhga qabul qilindingiz!\n\nSizning taklif havolangiz: {referral_link_man}\n\nMuhim: Havolaning yaroqlilik muddati {DAYS} kun bo'lib, faqat {MEMBER_LIMIT} marotaba ishlatishingiz mumkin.",
-            reply_markup=make_buttons(
-                words=[f'{send_message_to_admin_text}', f"{submit_application}"], row_width=2)
+    try:
+        if gender == "Erkak":
+            await bot.send_message(
+                chat_id=user_id,
+                text=f"Xurmatli <b>{user_full_name}</b>\nSiz guruhga qabul qilindingiz!\n\nSizning taklif havolangiz: {referral_link_man}\n\nMuhim: Havolaning yaroqlilik muddati {DAYS} kun bo'lib, faqat {MEMBER_LIMIT} marotaba ishlatishingiz mumkin.",
+                reply_markup=make_buttons(
+                    words=[f'{send_message_to_admin_text}', f"{submit_application}"], row_width=2)
+            )
+        elif gender == "Ayol":
+            await bot.send_message(
+                chat_id=user_id,
+                text=f"Siz guruhga qabul qilindingiz!\n\nSizning taklif havolangiz: {referral_link_woman}\n\nMuhim: Havolaning yaroqlilik muddati {DAYS} kun bo'lib, faqat {MEMBER_LIMIT} marotaba ishlatishingiz mumkin.")
+        await bot.edit_message_text(
+            text=f"{user_full_name}[<a href='https://{username}.t.me'>@{username}</a>]ning guruxga kirish arizasi tasdiqlandi va guruxga kirish xavolasi unga yuborildi.\n\nQabul qiluvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>",
+            chat_id=chat_id,
+            message_id=message_id,
         )
-    elif gender == "Ayol":
-        await bot.send_message(
-            chat_id=user_id,
-            text=f"Siz guruhga qabul qilindingiz!\n\nSizning taklif havolangiz: {referral_link_woman}\n\nMuhim: Havolaning yaroqlilik muddati {DAYS} kun bo'lib, faqat {MEMBER_LIMIT} marotaba ishlatishingiz mumkin.")
-    await bot.edit_message_text(
-        text=f"{user_full_name}[<a href='https://{username}.t.me'>@{username}</a>]ning guruxga kirish arizasi tasdiqlandi va guruxga kirish xavolasi unga yuborildi.\n\nQabul qiluvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>",
-        chat_id=chat_id,
-        message_id=message_id,
-    )
-    await send_message_to_admin_via_topic(
-        text=f"{user_full_name}[<a href='https://{username}.t.me'>@{username}</a>]ning guruxga kirish arizasi tasdiqlandi va guruxga kirish xavolasi unga yuborildi.\n\nQabul qiluvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>",
-        for_purpose="accepted_applications",
-        gender=gender,
-    )
-    await message.answer(
-        text=f"{user_full_name}[<a href='https://{username}.t.me'>@{username}</a>]ning guruxga kirish arizasi tasdiqlandi va guruxga kirish xavolasi unga yuborildi.\n\nQabul qiluvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>",
-    )
-
-
+        await send_message_to_admin_via_topic(
+            text=f"{user_full_name}[<a href='https://{username}.t.me'>@{username}</a>]ning guruxga kirish arizasi tasdiqlandi va guruxga kirish xavolasi unga yuborildi.\n\nQabul qiluvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>",
+            for_purpose="accepted_applications",
+            gender=gender,
+        )
+        await message.answer(
+            text=f"{user_full_name}[<a href='https://{username}.t.me'>@{username}</a>]ning guruxga kirish arizasi tasdiqlandi va guruxga kirish xavolasi unga yuborildi.\n\nQabul qiluvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>",
+        )
+    except:
+        await send_message_to_admin_via_topic(
+            text=f"{user_full_name} botni block holatiga o'tkazgan, bu holatda bot userga xabar yubora olmaydi.",
+            for_purpose="accepted_applications",
+            gender=gender,
+        )
+        await message.answer(f"{user_full_name} botni block holatiga o'tkazgan, bu holatda bot userga xabar yubora olmaydi.")
+        await state.finish()
 CANCEL_APPLICATION = {}
 
 
@@ -395,179 +402,226 @@ async def cancel_app(message: types.Message, payload: str):
     message_id = payload_items[3]
     admin_user_id = message.from_user.id
     await message.answer("📝 Arizani bekor qilish sababini kiriting:")
-    CANCEL_APPLICATION[f"cancel_app:{admin_user_id}"] = {}
-    CANCEL_APPLICATION[f"cancel_app:{admin_user_id}"]["user_id"] = user_id
-    CANCEL_APPLICATION[f"cancel_app:{admin_user_id}"]["message_id"] = message_id
-    CANCEL_APPLICATION[f"cancel_app:{admin_user_id}"]["chat_id"] = chat_id
+    try:
+        CANCEL_APPLICATION[f"cancel_app:{admin_user_id}"] = {}
+        CANCEL_APPLICATION[f"cancel_app:{admin_user_id}"]["user_id"] = user_id
+        CANCEL_APPLICATION[f"cancel_app:{admin_user_id}"]["message_id"] = message_id
+        CANCEL_APPLICATION[f"cancel_app:{admin_user_id}"]["chat_id"] = chat_id
+    except:
+        await message.answer("{user_full_name} user botni block holatiga o'tkazgan, bu holatda bot userga xabar yubora olmaydi.")
     await CancelApp.cause_text.set()
+
+GENDER_ = ""  # aslida bunday qilishim xato, lekin botni tezroq ish holatiga o'tkazishim kerak, meni kechir python;)
 
 
 @dp.message_handler(IsPrivate(), state=CancelApp.cause_text)
 async def cancel_app_ca(message: types.Message, state: FSMContext):
     admin_user_id = message.from_user.id
-    user_id = CANCEL_APPLICATION[f"cancel_app:{admin_user_id}"]["user_id"]
-    message_id = CANCEL_APPLICATION[f"cancel_app:{admin_user_id}"]["message_id"]
-    chat_id = CANCEL_APPLICATION[f"cancel_app:{admin_user_id}"]["chat_id"]
-    del CANCEL_APPLICATION[f"cancel_app:{admin_user_id}"]
-    user_data = await db.select_user(telegram_id=int(user_id))
-    user_full_name = user_data.get("full_name")
-    gender = user_data.get("gender")
-    username = user_data.get("username")
-    cause_text = message.text
-    await bot.send_message(
-        chat_id=user_id,
-        text=f"❌ Arizangiz bekor qilindi!\n\nSabab: <i>{cause_text}</i>",
-        reply_markup=make_buttons(
-            words=[f"{const_texts.send_message_to_admin_text}", f"{const_texts.submit_application}"])
-    )
+    try:
+        user_id = CANCEL_APPLICATION[f"cancel_app:{admin_user_id}"]["user_id"]
+        message_id = CANCEL_APPLICATION[f"cancel_app:{admin_user_id}"]["message_id"]
+        chat_id = CANCEL_APPLICATION[f"cancel_app:{admin_user_id}"]["chat_id"]
+        print(CANCEL_APPLICATION)
+        del CANCEL_APPLICATION[f"cancel_app:{admin_user_id}"]
+        user_data = await db.select_user(telegram_id=int(user_id))
+        user_full_name = user_data.get("full_name")
+        gender = user_data.get("gender")
+        GENDER_ = gender
+        username = user_data.get("username")
+        cause_text = message.text
+        await bot.send_message(
+            chat_id=user_id,
+            text=f"❌ Arizangiz bekor qilindi!\n\nSabab: <i>{cause_text}</i>",
+            reply_markup=make_buttons(
+                words=[f"{const_texts.send_message_to_admin_text}", f"{const_texts.submit_application}"])
+        )
 
-    await message.answer(
-        text=f"[<a href='https://{username}.t.me'>@{username}</a>] foydalanuvchining arizasi bekor qilindi.\n\nBekor qiluvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>\n\n<b>Sabab</b>: <i>{cause_text}</i>",
-    )
+        await message.answer(
+            text=f"[<a href='https://{username}.t.me'>@{username}</a>] foydalanuvchining arizasi bekor qilindi.\n\nBekor qiluvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>\n\n<b>Sabab</b>: <i>{cause_text}</i>",
+        )
 
-    await bot.edit_message_text(
-        text=f"[<a href='https://{username}.t.me'>@{username}</a>] foydalanuvchining arizasi bekor qilindi.\n\nBekor qiluvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>\n\n<b>Sabab</b>: <i>{cause_text}</i>",
-        chat_id=chat_id,
-        message_id=message_id,
-    )
-    await send_message_to_admin_via_topic(
-        text=f"[<a href='https://{username}.t.me'>@{username}</a>] foydalanuvchining arizasi bekor qilindi.\n\nBekor qiluvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>\n\n<b>Sabab</b>: <i>{cause_text}</i>",
-        for_purpose="canceled_applications",
-        gender=gender
-    )
+        await bot.edit_message_text(
+            text=f"[<a href='https://{username}.t.me'>@{username}</a>] foydalanuvchining arizasi bekor qilindi.\n\nBekor qiluvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>\n\n<b>Sabab</b>: <i>{cause_text}</i>",
+            chat_id=chat_id,
+            message_id=message_id,
+        )
+        await send_message_to_admin_via_topic(
+            text=f"[<a href='https://{username}.t.me'>@{username}</a>] foydalanuvchining arizasi bekor qilindi.\n\nBekor qiluvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>\n\n<b>Sabab</b>: <i>{cause_text}</i>",
+            for_purpose="canceled_applications",
+            gender=gender
+        )
+    except:
+        await send_message_to_admin_via_topic(
+            text=f"{user_full_name} user botni block holatiga o'tkazgan, bu holatda bot userga xabar yubora olmaydi.",
+            for_purpose="canceled_applications",
+            gender=GENDER_
+        )
+        await message.answer("{user_full_name} user botni block holatiga o'tkazgan, bu holatda bot userga xabar yubora olmaydi.")
     await state.finish()
 
 
 async def message_to_user(message: types.Message, payload):
     payload_items = payload.split(":")
-    user_id = payload_items[1]
-    chat_id = payload_items[2]
-    message_id = payload_items[3]
-    course_id = payload_items[4]
-    admin_user_id = message.from_user.id
-    await bot.copy_message(
-        chat_id=message.chat.id,
-        from_chat_id=chat_id,
-        message_id=message_id
-    )
-    await message.answer("📝 Xabaringizni quyida kiritishingiz mumkin:")
-    CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"] = {}
-    CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"]["user_id"] = user_id
-    CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"]["message_id"] = message_id
-    CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"]["chat_id"] = chat_id
-    CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"]["course_id"] = course_id
-    await MessageToUser.qestion.set()
+    try:
+        user_id = payload_items[1]
+        chat_id = payload_items[2]
+        message_id = payload_items[3]
+        course_id = payload_items[4]
+        admin_user_id = message.from_user.id
+        await bot.copy_message(
+            chat_id=message.chat.id,
+            from_chat_id=chat_id,
+            message_id=message_id
+        )
+        await message.answer("📝 Xabaringizni quyida kiritishingiz mumkin:")
+        CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"] = {}
+        CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"]["user_id"] = user_id
+        CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"]["message_id"] = message_id
+        CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"]["chat_id"] = chat_id
+        CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"]["course_id"] = course_id
+        await MessageToUser.qestion.set()
+    except:
+        await send_message_to_admin_via_topic(
+            text=f"User botni block holatiga o'tkazgan, bu holatda bot userga xabar yubora olmaydi.",
+            for_purpose="canceled_applications",
+            gender=GENDER_
+        )
+        await message.answer("{user_full_name} user botni block holatiga o'tkazgan, bu holatda bot userga xabar yubora olmaydi.")
 
 
 @dp.message_handler(IsPrivate(), state=MessageToUser.qestion)
 async def cancel_app_ca(message: types.Message, state: FSMContext):
-    if '/start' in message.text:
-        await message.answer(text="⚡ Oldingi xarakat bekor qilindi, davom ettirish uchun jarayonni qayta boshlang.")
-        await state.finish()
-        return
-    admin_user_id = message.from_user.id
-    user_id = CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"]["user_id"]
-    message_id = CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"]["message_id"]
-    chat_id = CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"]["chat_id"]
-    course_id = CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"]["course_id"]
-    del CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"]
-    user_data = await db.select_user(telegram_id=int(user_id))
-    user_full_name = user_data.get("full_name")
-    gender = user_data.get("gender")
-    username = user_data.get("username")
-    question = message.text
-    await bot.send_message(
-        chat_id=user_id,
-        text=f"📝 Sizga xabar yo'llandi! Quyidagi tugma yordamida javob qaytarishingiz mumkin.\n\nXabar: <i>{question}</i>",
-        reply_markup=make_buttons(
-            words=[f"💡 Javob yo'llash"])
-    )
-    await message.answer(
-        text=f"ℹ️ {user_full_name}[<a href='https://t.me/{username}'>@{username}</a>] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>\n\n<b>Xabar</b>: <i>{question}</i>",
-    )
-    # await bot.edit_message_text(
-    #     text=f"ℹ️ {user_full_name}[{user_id}] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>\n\n<b>Xabar</b>: <i>{question}</i>",
-    #     chat_id=chat_id,
-    #     message_id=message_id,
-    # )
-    await send_message_to_admin_via_topic(
-        text=f"ℹ️ {user_full_name}[<a href='https://t.me/{username}'>@{username}</a>] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>\n\n<b>Xabar</b>: <i>{question}</i>",
-        for_purpose="send_message",
-        gender=gender,
-        is_application=False,
-        user_id=user_id,
-        course_id=course_id
-    )
+    try:
+        if '/start' in message.text:
+            await message.answer(text="⚡ Oldingi xarakat bekor qilindi, davom ettirish uchun jarayonni qayta boshlang.")
+            await state.finish()
+            return
+        admin_user_id = message.from_user.id
+        user_id = CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"]["user_id"]
+        message_id = CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"]["message_id"]
+        chat_id = CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"]["chat_id"]
+        course_id = CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"]["course_id"]
+        del CANCEL_APPLICATION[f"message_to_user:{admin_user_id}"]
+        user_data = await db.select_user(telegram_id=int(user_id))
+        user_full_name = user_data.get("full_name")
+        gender = user_data.get("gender")
+        username = user_data.get("username")
+        question = message.text
+        await bot.send_message(
+            chat_id=user_id,
+            text=f"📝 Sizga xabar yo'llandi! Quyidagi tugma yordamida javob qaytarishingiz mumkin.\n\nXabar: <i>{question}</i>",
+            reply_markup=make_buttons(
+                words=[f"💡 Javob yo'llash"])
+        )
+        await message.answer(
+            text=f"ℹ️ {user_full_name}[<a href='https://t.me/{username}'>@{username}</a>] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>\n\n<b>Xabar</b>: <i>{question}</i>",
+        )
+        # await bot.edit_message_text(
+        #     text=f"ℹ️ {user_full_name}[{user_id}] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>\n\n<b>Xabar</b>: <i>{question}</i>",
+        #     chat_id=chat_id,
+        #     message_id=message_id,
+        # )
+        await send_message_to_admin_via_topic(
+            text=f"ℹ️ {user_full_name}[<a href='https://t.me/{username}'>@{username}</a>] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>\n\n<b>Xabar</b>: <i>{question}</i>",
+            for_purpose="send_message",
+            gender=gender,
+            is_application=False,
+            user_id=user_id,
+            course_id=course_id
+        )
+    except:
+        await send_message_to_admin_via_topic(
+            text=f"User botni block holatiga o'tkazgan, bu holatda bot userga xabar yubora olmaydi.",
+            for_purpose="canceled_applications",
+            gender=GENDER_
+        )
+        await message.answer(f"{user_full_name} botni block holatiga o'tkazgan, bu holatda bot userga xabar yubora olmaydi.")
     await state.finish()
 
 
 async def answer_to_question(message: types.Message, payload):
     payload_items = payload.split(":")
-    question_id = payload_items[1]
-    user_id = payload_items[2]
-    chat_id = payload_items[3]
-    message_id = payload_items[4]
-    admin_user_id = message.from_user.id
-    await bot.copy_message(
-        chat_id=message.chat.id,
-        from_chat_id=chat_id,
-        message_id=message_id
-    )
-    await message.answer("📝 Xabaringizni quyiga kiriting:")
-    CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"] = {}
-    CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]["user_id"] = user_id
-    CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]["chat_id"] = chat_id
-    CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]["message_id"] = message_id
-    CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]["question_id"] = question_id
-    await AnswerToUser.answer.set()
+    try:
+        question_id = payload_items[1]
+        user_id = payload_items[2]
+        chat_id = payload_items[3]
+        message_id = payload_items[4]
+        admin_user_id = message.from_user.id
+        await bot.copy_message(
+            chat_id=message.chat.id,
+            from_chat_id=chat_id,
+            message_id=message_id
+        )
+        await message.answer("📝 Xabaringizni quyiga kiriting:")
+        CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"] = {}
+        CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]["user_id"] = user_id
+        CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]["chat_id"] = chat_id
+        CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]["message_id"] = message_id
+        CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]["question_id"] = question_id
+        await AnswerToUser.answer.set()
+    except:
+        await send_message_to_admin_via_topic(
+            text=f"User botni block holatiga o'tkazgan, bu holatda bot userga xabar yubora olmaydi.",
+            for_purpose="canceled_applications",
+            gender=GENDER_
+        )
+        await message.answer("{user_full_name} user botni block holatiga o'tkazgan, bu holatda bot userga xabar yubora olmaydi.")
 
 
 @dp.message_handler(IsPrivate(), state=AnswerToUser.answer)
 async def cancel_app_ca(message: types.Message, state: FSMContext):
-    if '/start' in message.text:
-        await message.answer(text="⚡ Oldingi xarakat bekor qilindi, davom ettirish uchun jarayonni qayta boshlang.")
-        await state.finish()
-        return
-    admin_user_id = message.from_user.id
-    user_id = CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]["user_id"]
-    chat_id = CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]["chat_id"]
-    message_id = CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]["message_id"]
-    question_id = CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]["question_id"]
-    del CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]
-    user_data = await db.select_user(telegram_id=int(user_id))
-    user_full_name = user_data.get("full_name")
-    username = user_data.get("username")
-    gender = user_data.get("gender")
-    answer = message.text
-    await db.update_question(
-        id=int(question_id),
-        answer=answer,
-        respondent_id=admin_user_id,
-        respondent_full_name=message.from_user.full_name
-    )
-    await bot.send_message(
-        chat_id=user_id,
-        text=f"📝 Sizga xabar yo'llandi! Quyidagi tugma yordamida javob qaytarishingiz mumkin.\n\nXabar: <i>{answer}</i>",
-        reply_markup=make_buttons(
-            words=[f"💡 Javob yo'llash"])
-    )
-    await message.answer(
-        text=f"ℹ️ {user_full_name}[<a href='https://t.me/{username}'>@{username}</a>] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>\n\n<b>Xabar</b>: <i>{answer}</i>",
-    )
-    await send_message_to_admin_via_topic(
-        text=f"ℹ️ {user_full_name}[<a href='https://t.me/{username}'>@{username}</a>] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>\n\n<b>Xabar</b>: <i>{answer}</i>",
-        for_purpose="send_message",
-        gender=gender
-    )
-    # await bot.edit_message_text(
-    #     text=f"ℹ️ {user_full_name}[<a href='https://t.me/{username}'>@{username}</a>] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>\n\n<b>Xabar</b>: <i>{answer}</i>",
-    #     chat_id=chat_id,
-    #     message_id=message_id,
-    #     reply_markup=await button_for_admins_question(
-    #         question_id=question_id,
-    #         user_id=user_id,
-    #         chat_id=chat_id,
-    #         message_id=message_id
-    #         )
-    # )
+    try:
+        if '/start' in message.text:
+            await message.answer(text="⚡ Oldingi xarakat bekor qilindi, davom ettirish uchun jarayonni qayta boshlang.")
+            await state.finish()
+            return
+        admin_user_id = message.from_user.id
+        user_id = CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]["user_id"]
+        chat_id = CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]["chat_id"]
+        message_id = CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]["message_id"]
+        question_id = CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]["question_id"]
+        del CANCEL_APPLICATION[f"answer_to_question:{admin_user_id}"]
+        user_data = await db.select_user(telegram_id=int(user_id))
+        user_full_name = user_data.get("full_name")
+        username = user_data.get("username")
+        gender = user_data.get("gender")
+        answer = message.text
+        await db.update_question(
+            id=int(question_id),
+            answer=answer,
+            respondent_id=admin_user_id,
+            respondent_full_name=message.from_user.full_name
+        )
+        await bot.send_message(
+            chat_id=user_id,
+            text=f"📝 Sizga xabar yo'llandi! Quyidagi tugma yordamida javob qaytarishingiz mumkin.\n\nXabar: <i>{answer}</i>",
+            reply_markup=make_buttons(
+                words=[f"💡 Javob yo'llash"])
+        )
+        await message.answer(
+            text=f"ℹ️ {user_full_name}[<a href='https://t.me/{username}'>@{username}</a>] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>\n\n<b>Xabar</b>: <i>{answer}</i>",
+        )
+        await send_message_to_admin_via_topic(
+            text=f"ℹ️ {user_full_name}[<a href='https://t.me/{username}'>@{username}</a>] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[<a href='https://t.me/{message.from_user.username}'>@{message.from_user.username}</a>]</b>\n\n<b>Xabar</b>: <i>{answer}</i>",
+            for_purpose="send_message",
+            gender=gender
+        )
+        # await bot.edit_message_text(
+        #     text=f"ℹ️ {user_full_name}[<a href='https://t.me/{username}'>@{username}</a>] foydalanuvchiga xabar yo'llandi.\n\nXabar jo'natuvchi: <b>{message.from_user.full_name}[{message.from_user.id}]</b>\n\n<b>Xabar</b>: <i>{answer}</i>",
+        #     chat_id=chat_id,
+        #     message_id=message_id,
+        #     reply_markup=await button_for_admins_question(
+        #         question_id=question_id,
+        #         user_id=user_id,
+        #         chat_id=chat_id,
+        #         message_id=message_id
+        #         )
+        # )
+    except:
+        await send_message_to_admin_via_topic(
+            text=f"User botni block holatiga o'tkazgan, bu holatda bot userga xabar yubora olmaydi.",
+            for_purpose="canceled_applications",
+            gender=GENDER_
+        )
+        await message.answer("{user_full_name} user botni block holatiga o'tkazgan, bu holatda bot userga xabar yubora olmaydi.")
     await state.finish()
